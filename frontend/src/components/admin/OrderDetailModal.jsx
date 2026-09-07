@@ -116,6 +116,16 @@ export default function OrderDetailModal({ order, onClose, onUpdated }) {
         </div>
 
         <OrderSummaryCard order={order} />
+        {order.notifications?.shippingWhatsappLink && (
+          <a
+          href={order.notifications.shippingWhatsappLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-secondary inline-flex items-center gap-2 py-2 px-4 text-sm w-fit"
+        >
+          Message shipping partner on WhatsApp
+        </a>
+      )}
       </div>
     </Modal>
   );
