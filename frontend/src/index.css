@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border-soft;
+  }
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-base text-ink font-body antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+  ::selection {
+    background: #D0273D;
+    color: #0B0E14;
+  }
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+  :focus-visible {
+    outline: 2px solid #D0273D;
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Hairline data table used for spec sheets */
+  .spec-row {
+    @apply flex items-baseline justify-between gap-4 py-2 border-b border-border-soft text-sm;
+  }
+  .spec-row:last-child {
+    @apply border-b-0;
+  }
+  .spec-label {
+    @apply text-muted;
+  }
+  .spec-value {
+    @apply font-mono text-ink text-right;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover
+           text-ink font-body font-medium text-sm px-5 py-2.5 rounded
+           transition-colors duration-150 disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-transparent hover:bg-raised
+           border border-border text-ink font-body font-medium text-sm px-5 py-2.5 rounded
+           transition-colors duration-150 disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .input-field {
+    @apply bg-surface border border-border rounded px-3 py-2 text-sm text-ink
+           placeholder:text-faint focus:border-accent outline-none transition-colors;
+  }
+}
