@@ -1,0 +1,173 @@
+[
+  {
+    "sku": "YOUR-CPU-SKU",
+    "mpn": "REPLACE_WITH_EXACT_MANUFACTURER_PART_NUMBER",
+    "name": "Your cpu model",
+    "brand": "Your supplier brand",
+    "category": "cpu",
+    "price": 0,
+    "stock": 0,
+    "description": "Replace with supplier-approved description. Compatibility values here are examples only.",
+    "image": "/uploads/REPLACE.jpg",
+    "sourceUrl": "https://example.com/replace-with-source-page",
+    "photoRightsConfirmed": false,
+    "commercialDataVerified": false,
+    "compatibilityReviewed": false,
+    "specifications": {},
+    "compatibilityData": {
+      "socket": "AM5",
+      "tdp": 105
+    }
+  },
+  {
+    "sku": "YOUR-GPU-SKU",
+    "mpn": "REPLACE_WITH_EXACT_MANUFACTURER_PART_NUMBER",
+    "name": "Your gpu model",
+    "brand": "Your supplier brand",
+    "category": "gpu",
+    "price": 0,
+    "stock": 0,
+    "description": "Replace with supplier-approved description. Compatibility values here are examples only.",
+    "image": "/uploads/REPLACE.jpg",
+    "sourceUrl": "https://example.com/replace-with-source-page",
+    "photoRightsConfirmed": false,
+    "commercialDataVerified": false,
+    "compatibilityReviewed": false,
+    "specifications": {},
+    "compatibilityData": {
+      "length": 250,
+      "tdp": 200,
+      "recommendedPSU": 650
+    }
+  },
+  {
+    "sku": "YOUR-MOTHERBOARD-SKU",
+    "mpn": "REPLACE_WITH_EXACT_MANUFACTURER_PART_NUMBER",
+    "name": "Your motherboard model",
+    "brand": "Your supplier brand",
+    "category": "motherboard",
+    "price": 0,
+    "stock": 0,
+    "description": "Replace with supplier-approved description. Compatibility values here are examples only.",
+    "image": "/uploads/REPLACE.jpg",
+    "sourceUrl": "https://example.com/replace-with-source-page",
+    "photoRightsConfirmed": false,
+    "commercialDataVerified": false,
+    "compatibilityReviewed": false,
+    "specifications": {},
+    "compatibilityData": {
+      "socket": "AM5",
+      "ramType": "DDR5",
+      "maxRam": 128,
+      "formFactor": "ATX"
+    }
+  },
+  {
+    "sku": "YOUR-RAM-SKU",
+    "mpn": "REPLACE_WITH_EXACT_MANUFACTURER_PART_NUMBER",
+    "name": "Your ram model",
+    "brand": "Your supplier brand",
+    "category": "ram",
+    "price": 0,
+    "stock": 0,
+    "description": "Replace with supplier-approved description. Compatibility values here are examples only.",
+    "image": "/uploads/REPLACE.jpg",
+    "sourceUrl": "https://example.com/replace-with-source-page",
+    "photoRightsConfirmed": false,
+    "commercialDataVerified": false,
+    "compatibilityReviewed": false,
+    "specifications": {},
+    "compatibilityData": {
+      "type": "DDR5",
+      "capacity": 32
+    }
+  },
+  {
+    "sku": "YOUR-STORAGE-SKU",
+    "mpn": "REPLACE_WITH_EXACT_MANUFACTURER_PART_NUMBER",
+    "name": "Your storage model",
+    "brand": "Your supplier brand",
+    "category": "storage",
+    "price": 0,
+    "stock": 0,
+    "description": "Replace with supplier-approved description. Compatibility values here are examples only.",
+    "image": "/uploads/REPLACE.jpg",
+    "sourceUrl": "https://example.com/replace-with-source-page",
+    "photoRightsConfirmed": false,
+    "commercialDataVerified": false,
+    "compatibilityReviewed": false,
+    "specifications": {},
+    "compatibilityData": {
+      "interface": "NVMe"
+    }
+  },
+  {
+    "sku": "YOUR-PSU-SKU",
+    "mpn": "REPLACE_WITH_EXACT_MANUFACTURER_PART_NUMBER",
+    "name": "Your psu model",
+    "brand": "Your supplier brand",
+    "category": "psu",
+    "price": 0,
+    "stock": 0,
+    "description": "Replace with supplier-approved description. Compatibility values here are examples only.",
+    "image": "/uploads/REPLACE.jpg",
+    "sourceUrl": "https://example.com/replace-with-source-page",
+    "photoRightsConfirmed": false,
+    "commercialDataVerified": false,
+    "compatibilityReviewed": false,
+    "specifications": {},
+    "compatibilityData": {
+      "wattage": 650,
+      "formFactor": "ATX"
+    }
+  },
+  {
+    "sku": "YOUR-CASE-SKU",
+    "mpn": "REPLACE_WITH_EXACT_MANUFACTURER_PART_NUMBER",
+    "name": "Your case model",
+    "brand": "Your supplier brand",
+    "category": "case",
+    "price": 0,
+    "stock": 0,
+    "description": "Replace with supplier-approved description. Compatibility values here are examples only.",
+    "image": "/uploads/REPLACE.jpg",
+    "sourceUrl": "https://example.com/replace-with-source-page",
+    "photoRightsConfirmed": false,
+    "commercialDataVerified": false,
+    "compatibilityReviewed": false,
+    "specifications": {},
+    "compatibilityData": {
+      "supportedMotherboardSizes": [
+        "ATX",
+        "Micro-ATX",
+        "Mini-ITX"
+      ],
+      "gpuMaxLength": 350,
+      "cpuCoolerMaxHeight": 170,
+      "psuFormFactor": "ATX"
+    }
+  },
+  {
+    "sku": "YOUR-CPU-COOLER-SKU",
+    "mpn": "REPLACE_WITH_EXACT_MANUFACTURER_PART_NUMBER",
+    "name": "Your cpu-cooler model",
+    "brand": "Your supplier brand",
+    "category": "cpu-cooler",
+    "price": 0,
+    "stock": 0,
+    "description": "Replace with supplier-approved description. Compatibility values here are examples only.",
+    "image": "/uploads/REPLACE.jpg",
+    "sourceUrl": "https://example.com/replace-with-source-page",
+    "photoRightsConfirmed": false,
+    "commercialDataVerified": false,
+    "compatibilityReviewed": false,
+    "specifications": {},
+    "compatibilityData": {
+      "supportedSockets": [
+        "AM5"
+      ],
+      "height": 155,
+      "tdpRating": 150
+    }
+  }
+]

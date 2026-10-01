@@ -21,12 +21,13 @@ beforeAll(async () => {
   if (!process.env.MONGODB_URI) {
     throw new Error('Set MONGODB_URI (a test database) before running tests.');
   }
+  require('../utils/testDatabase')(process.env.MONGODB_URI);
   await mongoose.connect(process.env.MONGODB_URI);
   await User.deleteMany({ email: TEST_EMAIL });
 });
 
 afterAll(async () => {
-  await User.deleteMany({ email: TEST_EMAIL });
+  if (mongoose.connection.readyState) await User.deleteMany({ email: TEST_EMAIL });
   await mongoose.disconnect();
 });
 

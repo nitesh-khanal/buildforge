@@ -1,0 +1,9 @@
+.git
+**/node_modules
+**/.env
+**/.env.*
+**/dist
+**/coverage
+**/*.log
+backend/uploads/*
+!backend/uploads/.gitkeep

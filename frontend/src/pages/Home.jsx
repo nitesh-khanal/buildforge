@@ -9,6 +9,7 @@ export default function Home() {
   const [featured, setFeatured] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -22,6 +23,8 @@ export default function Home() {
           setFeatured(fData.products);
           setCategories(cData.categories);
         }
+      } catch (err) {
+        if (!cancelled) setLoadError(err.message);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -93,6 +96,7 @@ export default function Home() {
         </div>
       </section>
 
+      {loadError && <p role="alert" className="max-w-content mx-auto px-4 sm:px-6 text-stock-out text-sm">The catalog is temporarily unavailable. Please try again shortly.</p>}
       {/* Category tiles */}
       <section className="max-w-content mx-auto px-4 sm:px-6 py-10">
         <h2 className="text-sm font-medium text-muted mb-4">Shop by part</h2>

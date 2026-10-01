@@ -42,11 +42,12 @@ export default function ProductCard({ product }) {
     >
       <div className="relative aspect-[4/3] bg-raised border-b border-border-soft flex items-center justify-center overflow-hidden">
         <img
-          src={product.image?.startsWith('http') ? product.image : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${product.image}`}
+          src={product.image?.startsWith('http') ? product.image : `${new URL(import.meta.env.VITE_API_URL || '/api', window.location.origin).origin}${product.image}`}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+          className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-300"
           onError={(e) => {
-            e.currentTarget.style.display = 'none';
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = '/placeholder.svg';
           }}
           loading="lazy"
         />

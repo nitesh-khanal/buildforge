@@ -4,7 +4,7 @@ import { formatNPR } from '../utils/format';
 import QuantityStepper from '../components/QuantityStepper';
 
 function apiOrigin() {
-  return import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+  return new URL(import.meta.env.VITE_API_URL || '/api', window.location.origin).origin;
 }
 
 function CartItemRow({ item }) {
@@ -19,7 +19,8 @@ function CartItemRow({ item }) {
           alt={item.name}
           className="w-full h-full object-cover"
           onError={(e) => {
-            e.currentTarget.style.display = 'none';
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = '/placeholder.svg';
           }}
         />
       </div>

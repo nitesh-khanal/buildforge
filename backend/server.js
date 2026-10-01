@@ -1,10 +1,18 @@
 require('dotenv').config();
+const errors = require('./config/production').productionErrors();
+if (errors.length) {
+  console.error('Production configuration errors:\n' + errors.join('\n'));
+  process.exit(1);
+}
 const app = require('./app');
 const connectDB = require('./config/db');
 const { runEsewaSweep } = require('./services/esewaSweepRunner');
 const Category = require('./models/Category');
 const { CATEGORIES } = require('./models/Product');
 const { ensureDefaultCategories } = require('./utils/categoryDefaults');
+
+let server;
+let sweepTimer;
 
 const PORT = process.env.PORT || 5000;
 
@@ -19,7 +27,7 @@ connectDB().then(async () => {
     console.error('Failed to seed default categories:', err.message);
   }
 
-  app.listen(PORT, () => {
+  server = app.listen(PORT, () => {
     console.log(`BuildForge API listening on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
   });
 
@@ -33,11 +41,23 @@ connectDB().then(async () => {
       ? 30
       : Number(process.env.ESEWA_SWEEP_INTERVAL_MINUTES);
     if (intervalMinutes > 0) {
-      setInterval(() => runEsewaSweep().catch((err) => console.error('eSewa sweep failed:', err.message)), intervalMinutes * 60 * 1000);
+      sweepTimer = setInterval(() => runEsewaSweep().catch((err) => console.error('eSewa sweep failed:', err.message)), intervalMinutes * 60 * 1000);
     }
   }
-});
+}).catch((err) => { console.error('Startup failed:', err.message); process.exit(1); });
 
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err.message);
 });
+
+async function shutdown() {
+  clearInterval(sweepTimer);
+  const deadline = setTimeout(() => process.exit(1), 25000);
+  deadline.unref();
+  if (server) await new Promise((resolve) => server.close(resolve));
+  await require('mongoose').disconnect();
+  clearTimeout(deadline);
+  process.exit(0);
+}
+process.once('SIGTERM', shutdown);
+process.once('SIGINT', shutdown);

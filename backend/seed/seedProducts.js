@@ -20,6 +20,7 @@ const DEV_CUSTOMER = {
 };
 
 async function run() {
+  if (process.env.NODE_ENV === 'production') throw new Error('Demo seeding is disabled in production. Use the catalog importer.');
   await connectDB();
 
   console.log('Clearing existing products...');

@@ -6,7 +6,7 @@ import StockBadge from '../StockBadge';
 import Pagination from '../Pagination';
 
 function apiOrigin() {
-  return import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+  return new URL(import.meta.env.VITE_API_URL || '/api', window.location.origin).origin;
 }
 
 const SORT_OPTIONS = [
@@ -33,7 +33,8 @@ function PickerCard({ product, onSelect }) {
           alt={product.name}
           className="w-full h-full object-cover"
           onError={(e) => {
-            e.currentTarget.style.display = 'none';
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = '/placeholder.svg';
           }}
           loading="lazy"
         />

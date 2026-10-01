@@ -1,0 +1,36 @@
+services:
+  app:
+    build: .
+    env_file: deploy/production.env
+    environment:
+      NODE_ENV: production
+      TRUST_PROXY: 'true'
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
+    volumes:
+      - uploads:/app/backend/uploads
+    networks: [web]
+    # Port 5000 stays inside Docker; only Caddy is publicly exposed.
+  caddy:
+    image: caddy:2-alpine
+    env_file: deploy/production.env
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    networks: [web]
+volumes:
+  uploads:
+  caddy_data:
+  caddy_config:
+networks:
+  web:

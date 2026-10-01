@@ -13,7 +13,7 @@ const nodemailer = require('nodemailer');
 let cachedTransporter = null;
 
 function isEnabled() {
-  return Boolean(process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
+  return process.env.EMAIL_ENABLED !== 'false' && Boolean(process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
 }
 
 function getTransporter() {

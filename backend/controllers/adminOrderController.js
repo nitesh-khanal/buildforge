@@ -1,3 +1,4 @@
+const pagination = require('../utils/pagination');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Notification = require('../models/Notification');
@@ -28,13 +29,12 @@ const listOrders = asyncHandler(async (req, res) => {
     filter.$or = [{ orderId: re }, { 'shippingAddress.email': re }, { 'shippingAddress.fullName': re }];
   }
 
-  const pageNum = Math.max(1, Number(page) || 1);
-  const pageSize = Math.min(100, Number(limit) || 20);
+  const { page: pageNum, limit: pageSize, skip } = pagination({ page, limit });
 
   const [orders, total] = await Promise.all([
     Order.find(filter)
       .sort('-createdAt')
-      .skip((pageNum - 1) * pageSize)
+      .skip(skip)
       .limit(pageSize)
       .populate('user', 'name email'),
     Order.countDocuments(filter),

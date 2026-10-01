@@ -29,8 +29,6 @@ function backendUrl() {
   return process.env.BACKEND_URL || 'http://localhost:5000';
 }
 
-const SHIPPING_COST = 300; // flat rate NPR; free-shipping threshold logic can be added later
-const FREE_SHIPPING_THRESHOLD = 100000;
 
 function validateShippingAddress(addr) {
   const required = ['fullName', 'email', 'phone', 'address', 'city', 'province'];
@@ -66,6 +64,15 @@ function simulateCardPayment(cardDetails) {
 const createOrder = asyncHandler(async (req, res) => {
   const { shippingAddress, paymentMethod, cardDetails, couponCode } = req.body;
 
+  const config = require('../config/production').siteConfig();
+  if (!config.checkoutEnabled) {
+    res.status(503);
+    throw new Error('Orders are not open yet. Please check back soon.');
+  }
+  if (!config.paymentMethods.some((method) => method.id === paymentMethod)) {
+    res.status(400);
+    throw new Error('This payment method is unavailable.');
+  }
   validateShippingAddress(shippingAddress);
   if (!['card', 'cod', 'esewa'].includes(paymentMethod)) {
     res.status(400);
@@ -89,6 +96,10 @@ const createOrder = asyncHandler(async (req, res) => {
     if (!product) {
       res.status(400);
       throw new Error('One of the items in your cart is no longer available.');
+    }
+    if (process.env.NODE_ENV === 'production' && (product.catalogVerified !== true || product.isArchived)) {
+      res.status(400);
+      throw new Error(`${product.name} is not available for purchase yet.`);
     }
     if (product.stock < qtyNeeded) {
       res.status(400);
@@ -137,7 +148,7 @@ const createOrder = asyncHandler(async (req, res) => {
     discount = couponResult.discount;
   }
 
-  const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const shippingCost = subtotal >= config.freeShippingThreshold ? 0 : config.shippingCost;
   const total = subtotal + shippingCost - discount;
 
   // Determine payment status per method (business rules #7, #8, #9).
@@ -319,34 +330,14 @@ const esewaSuccessCallback = asyncHandler(async (req, res) => {
   return res.redirect(`${clientUrl}/order-confirmation/${order.orderId}?status=pending`);
 });
 
-// GET /api/orders/esewa/failure — eSewa's failure redirect. Releases the
-// stock that was reserved at checkout time (business rule #7: a failed
-// payment never results in a paid order — and it shouldn't leave phantom
-// stock reservations behind either) and lets the customer know by email.
+// eSewa's browser failure redirect is unsigned. It must never cancel an
+// order or release stock; authenticated reconciliation/sweeps determine
+// payment state independently from the gateway.
 const esewaFailureCallback = asyncHandler(async (req, res) => {
-  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-  const transactionUuid = req.query.transaction_uuid || req.query.data;
-
-  if (!transactionUuid) {
-    return res.redirect(`${clientUrl}/order-confirmation?status=failed`);
-  }
-
-  const order = await Order.findOne({ orderId: transactionUuid, paymentMethod: 'esewa' });
-  if (!order || order.paymentStatus === 'Paid') {
-    // Nothing to release, or it turns out it did complete — don't restock.
-    return res.redirect(`${clientUrl}/order-confirmation/${transactionUuid}?status=failed`);
-  }
-
-  if (order.paymentStatus !== 'Failed') {
-    order.paymentStatus = 'Failed';
-    order.orderStatus = 'Cancelled';
-    await order.save();
-    await restockItems(Product, order.items);
-    await orderNotificationService.notifyPaymentFailed(order);
-    await notificationService.notifyPaymentFailedInApp(Notification, order);
-  }
-
-  return res.redirect(`${clientUrl}/order-confirmation/${order.orderId}?status=failed`);
+  const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
+  const id = req.query.transaction_uuid;
+  const path = typeof id === 'string' && /^BF-[A-Z0-9-]{1,100}$/.test(id) ? `/${encodeURIComponent(id)}` : '';
+  return res.redirect(`${clientUrl}/order-confirmation${path}?status=verification_error`);
 });
 
 // GET /api/orders/:id/esewa-status — manual reconciliation for when the

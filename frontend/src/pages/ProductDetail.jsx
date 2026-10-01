@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api from '../lib/api';
+import { useSiteConfig } from '../lib/siteConfig';
 import { useCart } from '../context/CartContext';
 import { formatNPR } from '../utils/format';
 import { getSpecEntries, CATEGORY_LABELS } from '../utils/specs';
@@ -21,11 +22,12 @@ const WORKS_WITH_LABELS = {
 };
 
 function apiOrigin() {
-  return import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+  return new URL(import.meta.env.VITE_API_URL || '/api', window.location.origin).origin;
 }
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const site = useSiteConfig();
   const { addItem } = useCart();
 
   const [product, setProduct] = useState(null);
@@ -41,6 +43,7 @@ export default function ProductDetail() {
     let cancelled = false;
     setLoading(true);
     setNotFound(false);
+    setProduct(null);
     setQty(1);
     setAddState('idle');
 
@@ -48,7 +51,7 @@ export default function ProductDetail() {
       .get(`/products/${id}`)
       .then(({ data }) => {
         if (cancelled) return;
-        setProduct(data.product);
+        setProduct({ ...data.product, seo: data.seo });
         return Promise.all([
           api.get(`/products/${id}/related`).catch(() => ({ data: { products: [] } })),
           api.get(`/products/${id}/works-with`).catch(() => ({ data: { worksWith: {} } })),
@@ -67,6 +70,22 @@ export default function ProductDetail() {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!product) return;
+    document.title = `${product.name} | BuildForge`;
+    const values = { 'description': product.description || product.name, 'og:title': document.title, 'og:description': product.description || product.name, 'og:image': product.image?.startsWith('http') ? product.image : `${apiOrigin()}${product.image}`, 'og:type': 'product', 'robots': site.indexable && product.catalogVerified && !product.isArchived ? 'index,follow' : 'noindex,follow' };
+    Object.entries(values).forEach(([key, content]) => {
+      const attribute = key.startsWith('og:') ? 'property' : 'name';
+      let node = document.querySelector(`meta[${attribute}="${key}"]`);
+      if (!node) { node = document.createElement('meta'); node.setAttribute(attribute, key); document.head.appendChild(node); }
+      node.content = content;
+    });
+    document.getElementById('product-schema')?.remove();
+    if (product.seo) {
+      const schema = document.createElement('script'); schema.id = 'product-schema'; schema.type = 'application/ld+json'; schema.textContent = JSON.stringify(product.seo); document.head.appendChild(schema);
+    }
+  }, [product, site.indexable]);
 
   async function handleAdd() {
     setAddState('adding');
@@ -120,7 +139,8 @@ export default function ProductDetail() {
             alt={product.name}
             className="w-full h-full object-cover"
             onError={(e) => {
-              e.currentTarget.style.display = 'none';
+              e.currentTarget.onerror = null;
+            e.currentTarget.src = '/placeholder.svg';
             }}
           />
         </div>

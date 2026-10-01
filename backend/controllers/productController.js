@@ -25,7 +25,7 @@ const getProducts = asyncHandler(async (req, res) => {
 
   const [products, total] = await Promise.all([
     features.query,
-    Product.countDocuments({ ...features.filter, isArchived: { $ne: true } }),
+    Product.countDocuments(Product.activeFilter(features.filter)),
   ]);
 
   res.json({
@@ -46,11 +46,11 @@ const getProducts = asyncHandler(async (req, res) => {
 // related, works-with, category counts) actually hide archived products.
 const getProductById = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
-  if (!product) {
+  if (!product || (process.env.NODE_ENV === 'production' && !product.catalogVerified)) {
     res.status(404);
     throw new Error('Product not found.');
   }
-  res.json({ success: true, product });
+  res.json({ success: true, product, seo: require('../utils/seo').productSchema(product, require('../utils/seo').origin()) });
 });
 
 // GET /api/products/:id/related — same category, excluding itself
@@ -102,7 +102,7 @@ const getCategories = asyncHandler(async (req, res) => {
 
   const [counts, categoryDocs] = await Promise.all([
     Product.aggregate([
-      { $match: { isArchived: { $ne: true } } },
+      { $match: Product.activeFilter() },
       { $group: { _id: '$category', count: { $sum: 1 } } },
     ]),
     Category.find({ slug: { $in: CATEGORIES } }),

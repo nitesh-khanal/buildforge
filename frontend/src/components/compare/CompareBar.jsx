@@ -31,7 +31,8 @@ export default function CompareBar() {
                 alt={item.name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.onerror = null;
+            e.currentTarget.src = '/placeholder.svg';
                 }}
               />
               <button

@@ -7,7 +7,12 @@ function notFound(req, res, next) {
 // eslint-disable-next-line no-unused-vars
 function errorHandler(err, req, res, next) {
   let statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+  const errorStatus = Number(err.statusCode || err.status);
+  if (Number.isInteger(errorStatus) && errorStatus >= 400 && errorStatus <= 599) statusCode = errorStatus;
   let message = err.message || 'Something went wrong. Please try again.';
+
+  if (err.type === 'entity.parse.failed') { statusCode = 400; message = 'Invalid JSON request.'; }
+  if (err.type === 'entity.too.large') { statusCode = 413; message = 'Request is too large.'; }
 
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
@@ -30,7 +35,8 @@ function errorHandler(err, req, res, next) {
     message = `${field ? field : 'Field'} already exists.`;
   }
 
-  console.error(err.stack);
+  console.error(err.name, statusCode >= 500 ? 'Internal request error' : message);
+  if (statusCode >= 500 && process.env.NODE_ENV === 'production') message = 'Something went wrong. Please try again.';
 
   res.status(statusCode).json({
     success: false,

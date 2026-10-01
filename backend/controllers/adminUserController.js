@@ -1,3 +1,4 @@
+const pagination = require('../utils/pagination');
 const User = require('../models/User');
 const Order = require('../models/Order');
 const asyncHandler = require('../utils/asyncHandler');
@@ -13,13 +14,12 @@ const listUsers = asyncHandler(async (req, res) => {
     filter.$or = [{ name: re }, { email: re }];
   }
 
-  const pageNum = Math.max(1, Number(page) || 1);
-  const pageSize = Math.min(100, Number(limit) || 20);
+  const { page: pageNum, limit: pageSize, skip } = pagination({ page, limit });
 
   const [users, total] = await Promise.all([
     User.find(filter)
       .sort('-createdAt')
-      .skip((pageNum - 1) * pageSize)
+      .skip(skip)
       .limit(pageSize),
     User.countDocuments(filter),
   ]);
@@ -44,11 +44,15 @@ const getUser = asyncHandler(async (req, res) => {
     throw new Error('User not found.');
   }
 
-  const orders = await Order.find({ user: user._id }).sort('-createdAt').limit(20);
-  const orderCount = await Order.countDocuments({ user: user._id });
-  const totalSpent = orders
-    .filter((o) => ['Paid', 'COD'].includes(o.paymentStatus))
-    .reduce((sum, o) => sum + o.total, 0);
+  const [orders, orderCount, spending] = await Promise.all([
+    Order.find({ user: user._id }).sort('-createdAt').limit(20),
+    Order.countDocuments({ user: user._id }),
+    Order.aggregate([
+      { $match: { user: user._id, paymentStatus: { $in: ['Paid', 'COD'] } } },
+      { $group: { _id: null, totalSpent: { $sum: '$total' } } },
+    ]),
+  ]);
+  const totalSpent = spending[0]?.totalSpent || 0;
 
   res.json({ success: true, user, orderCount, totalSpent, recentOrders: orders });
 });

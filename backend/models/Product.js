@@ -13,6 +13,10 @@ const CATEGORIES = [
 
 const productSchema = new mongoose.Schema(
   {
+    sku: { type: String, unique: true, sparse: true, trim: true },
+    mpn: { type: String, trim: true },
+    catalogVerified: { type: Boolean, default: false, index: true },
+    catalogSource: { url: String, photoRightsConfirmed: Boolean, importedAt: Date },
     name: { type: String, required: true, trim: true, index: true },
     brand: { type: String, required: true, trim: true, index: true },
     category: {
@@ -23,7 +27,7 @@ const productSchema = new mongoose.Schema(
     },
     price: { type: Number, required: true, min: 0, index: true },
     description: { type: String, default: '' },
-    image: { type: String, default: '/uploads/placeholder.png' },
+    image: { type: String, default: '/placeholder.svg' },
     stock: { type: Number, required: true, min: 0, default: 0 },
     rating: { type: Number, min: 0, max: 5, default: 0 },
     isFeatured: { type: Boolean, default: false },
@@ -85,8 +89,11 @@ productSchema.set('toObject', { virtuals: true });
 // products from browsing" can't accidentally be forgotten on a future new
 // endpoint the way it easily could be if every controller repeated its own
 // `{ isArchived: { $ne: true } }` clause inline.
+productSchema.statics.activeFilter = function (filter = {}) {
+  return { ...filter, isArchived: { $ne: true }, ...(process.env.NODE_ENV === 'production' ? { catalogVerified: true } : {}) };
+};
 productSchema.statics.findActive = function (filter = {}) {
-  return this.find({ ...filter, isArchived: { $ne: true } });
+  return this.find(this.activeFilter(filter));
 };
 
 module.exports = mongoose.model('Product', productSchema);

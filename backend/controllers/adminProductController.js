@@ -112,6 +112,8 @@ const updateProduct = asyncHandler(async (req, res) => {
     product.compatibilityData = { ...product.compatibilityData, ...req.body.compatibilityData };
   }
 
+  // Product changes require a new catalog review before accepting real orders.
+  product.catalogVerified = false;
   await product.save();
   res.json({ success: true, product });
 });
@@ -202,6 +204,7 @@ const uploadProductImage = asyncHandler(async (req, res) => {
   }
 
   product.image = `/uploads/${req.file.filename}`;
+  product.catalogVerified = false;
   await product.save();
   res.json({ success: true, product });
 });

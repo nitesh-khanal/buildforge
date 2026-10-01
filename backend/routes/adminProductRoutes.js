@@ -14,6 +14,10 @@ const {
 
 router.use(protect, authorize('admin'));
 
+const { importCatalog, uploadCatalogPhoto } = require('../controllers/catalogController');
+router.post('/catalog/import', importCatalog);
+router.post('/catalog/photo', handleProductImageUpload, uploadCatalogPhoto);
+
 router.get('/', listProducts);
 router.post('/', createProduct);
 router.put('/:id', updateProduct);

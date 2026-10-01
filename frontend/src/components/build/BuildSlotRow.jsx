@@ -4,7 +4,7 @@ import { formatNPR } from '../../utils/format';
 import { CATEGORY_LABELS } from '../../utils/specs';
 
 function apiOrigin() {
-  return import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+  return new URL(import.meta.env.VITE_API_URL || '/api', window.location.origin).origin;
 }
 
 const ISSUE_BORDER = {
@@ -41,7 +41,8 @@ export default function BuildSlotRow({ slot, required, product, issues, onChoose
                 alt={product.name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.onerror = null;
+            e.currentTarget.src = '/placeholder.svg';
                 }}
               />
             </div>

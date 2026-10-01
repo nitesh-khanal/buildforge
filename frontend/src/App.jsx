@@ -32,6 +32,9 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminReviews from './pages/admin/AdminReviews';
 import AdminCoupons from './pages/admin/AdminCoupons';
 import AdminCommunity from './pages/admin/AdminCommunity';
+import CatalogImport from './pages/admin/CatalogImport';
+import StoreInfo from './pages/StoreInfo';
+import SiteFeatures from './components/SiteFeatures';
 import NotFound from './pages/NotFound';
 
 function ScrollToTop() {
@@ -46,10 +49,12 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col">
       <ScrollToTop />
+      <SiteFeatures />
       <Navbar />
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<Home />} />
+          {['privacy', 'shipping', 'returns', 'contact'].map((page) => <Route key={page} path={`/${page}`} element={<StoreInfo page={page} />} />)}
           <Route path="/shop" element={<Shop />} />
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
@@ -126,6 +131,7 @@ export default function App() {
             }
           >
             <Route index element={<AdminDashboard />} />
+            <Route path="catalog-import" element={<CatalogImport />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="categories" element={<AdminCategories />} />
             <Route path="orders" element={<AdminOrders />} />

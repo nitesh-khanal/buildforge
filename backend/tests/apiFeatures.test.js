@@ -58,6 +58,7 @@ describe('ApiFeatures', () => {
     features.filterSpecs();
     const findCall = query.__calls.find(([op]) => op === 'find');
     expect(findCall[1]).toEqual({ 'specifications.socket': 'AM5', 'specifications.cores': '8' });
+    expect(features.filter).toEqual(findCall[1]);
   });
 
   it('defaults to sorting by newest when no sort param is given', () => {

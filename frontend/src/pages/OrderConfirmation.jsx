@@ -9,7 +9,7 @@ const STATUS_BANNERS = {
   success: {
     tone: 'text-stock-in',
     title: 'Payment confirmed',
-    body: "Your order is confirmed and moving to processing. We've emailed a receipt.",
+    body: "Your payment is confirmed. Follow the order status below.",
   },
   failed: {
     tone: 'text-stock-out',
@@ -72,7 +72,8 @@ export default function OrderConfirmation() {
     }
   }
 
-  const banner = status && STATUS_BANNERS[status];
+  const verifiedStatus = order ? (order.paymentStatus === 'Paid' ? 'success' : order.paymentStatus === 'Failed' ? 'failed' : order.paymentMethod === 'esewa' ? 'pending' : null) : (['invalid', 'not_found', 'verification_error'].includes(status) ? status : null);
+  const banner = verifiedStatus && STATUS_BANNERS[verifiedStatus];
 
   return (
     <div className="max-w-content mx-auto px-4 sm:px-6 py-10">

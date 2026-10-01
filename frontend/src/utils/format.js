@@ -1,16 +1,15 @@
+import { imageUrl } from '../lib/siteFeatures.mjs';
+
 const nprFormatter = new Intl.NumberFormat('en-NP', {
-  maximumFractionDigits: 0,
+  maximumFractionDigits: 2,
 });
 
 export function formatNPR(amount) {
-  return `NPR ${nprFormatter.format(Math.round(amount || 0))}`;
+  return `NPR ${nprFormatter.format(amount || 0)}`;
 }
 
 export function resolveImageUrl(image) {
-  if (!image) return '';
-  if (image.startsWith('http')) return image;
-  const origin = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
-  return `${origin}${image}`;
+  return imageUrl(image, import.meta.env.VITE_API_URL || '/api', window.location.origin);
 }
 
 export function stockStatusLabel(status) {

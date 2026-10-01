@@ -38,14 +38,26 @@ const app = express();
 // client spoof its own IP and dodge both rate limiters below. Off unless
 // explicitly opted into via env var, same off-by-default spirit as the
 // email/WhatsApp/Gemini integrations.
-if (process.env.TRUST_PROXY) {
+if (process.env.TRUST_PROXY === 'true') {
   app.set('trust proxy', 1);
 }
 
-app.use(helmet());
+app.disable('x-powered-by');
+app.use(helmet({
+  contentSecurityPolicy: { directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'", 'https://www.googletagmanager.com'],
+    styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+    fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+    imgSrc: ["'self'", 'data:', 'https:'],
+    connectSrc: ["'self'", ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:5000'] : []), 'https://*.google-analytics.com', 'https://*.analytics.google.com', 'https://www.googletagmanager.com'],
+    formAction: ["'self'", 'https://epay.esewa.com.np', ...(process.env.NODE_ENV !== 'production' ? ['https://rc-epay.esewa.com.np'] : [])],
+  } },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: new URL(process.env.CLIENT_URL || 'http://localhost:5173').origin,
     credentials: true,
   })
 );
@@ -58,12 +70,30 @@ app.use(
 app.use(express.json({ limit: '200kb' }));
 app.use(cookieParser());
 app.use(mongoSanitize());
+// Cookie-authenticated writes must come from the configured storefront.
+app.use((req, res, next) => {
+  const origin = req.get('origin');
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && origin && origin !== new URL(process.env.CLIENT_URL || 'http://localhost:5173').origin) {
+    return res.status(403).json({ success: false, message: 'Request origin is not allowed.' });
+  }
+  next();
+});
 
 if (process.env.NODE_ENV !== 'test') {
-  app.use(morgan('dev'));
+  morgan.token('safe-path', (req) => req.path);
+  app.use(morgan(':method :safe-path :status :response-time ms', {
+    // Avoid logging eSewa callback tokens or search/customer query strings.
+    stream: { write: (line) => console.log(line.trim()) },
+  }));
 }
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.get('/api/ready', (req, res) => {
+  const ready = require('mongoose').connection.readyState === 1;
+  res.status(ready ? 200 : 503).json({ success: ready });
+});
+app.get('/api/site-config', (req, res) => res.json(require('./config/production').siteConfig()));
 
 app.get('/api/health', (req, res) => res.json({ success: true, message: 'BuildForge API is running' }));
 
@@ -116,6 +146,8 @@ app.use('/api/admin/community', adminCommunityRoutes);
 // models/Category.js for why the fixed 8-category set itself isn't
 // manageable here.
 app.use('/api/admin/categories', adminCategoryRoutes);
+
+require('./routes/storefrontRoutes')(app);
 
 app.use(notFound);
 app.use(errorHandler);

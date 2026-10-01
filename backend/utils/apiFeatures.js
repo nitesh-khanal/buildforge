@@ -1,3 +1,5 @@
+const pagination = require('./pagination');
+
 // Turns req.query into a Mongoose query for product listing.
 // Supports: category, brand, minPrice/maxPrice, rating, availability, search,
 // sort, page/limit, plus arbitrary spec filters like socket/vram/wattage
@@ -49,6 +51,7 @@ class ApiFeatures {
       }
     });
     if (Object.keys(specFilter).length) {
+      Object.assign(this.filter, specFilter);
       this.query = this.query.find(specFilter);
     }
     return this;
@@ -68,9 +71,7 @@ class ApiFeatures {
   }
 
   paginate() {
-    const page = Math.max(1, Number(this.reqQuery.page) || 1);
-    const limit = Math.min(60, Number(this.reqQuery.limit) || 20);
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = pagination(this.reqQuery, 60);
     this.query = this.query.skip(skip).limit(limit);
     this.pagination = { page, limit };
     return this;

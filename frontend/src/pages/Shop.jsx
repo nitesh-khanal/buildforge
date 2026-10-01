@@ -23,6 +23,7 @@ export default function Shop() {
   const [meta, setMeta] = useState({ total: 0, page: 1, pages: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [retry, setRetry] = useState(0);
 
   const filters = useMemo(() => {
     const f = { ...EMPTY_FILTERS };
@@ -45,12 +46,15 @@ export default function Shop() {
   );
 
   useEffect(() => {
-    api.get('/categories').then(({ data }) => setCategories(data.categories));
+    api.get('/categories')
+      .then(({ data }) => setCategories(data.categories))
+      .catch(() => setCategories([]));
   }, []);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setError(null);
     const params = { ...filters, limit: 24 };
     api
       .get('/products', { params })
@@ -65,7 +69,7 @@ export default function Shop() {
     return () => {
       cancelled = true;
     };
-  }, [filters]);
+  }, [filters, retry]);
 
   const activeCategoryLabel = filters.category ? CATEGORY_LABELS[filters.category] : null;
 
@@ -76,7 +80,7 @@ export default function Shop() {
           {filters.search ? `Results for “${filters.search}”` : activeCategoryLabel || 'All parts'}
         </h1>
         <p className="text-sm text-faint mt-1">
-          {loading ? 'Loading…' : `${meta.total} ${meta.total === 1 ? 'result' : 'results'}`}
+          {loading ? 'Loading…' : error ? 'Results unavailable' : `${meta.total} ${meta.total === 1 ? 'result' : 'results'}`}
         </p>
       </div>
 
@@ -91,6 +95,7 @@ export default function Shop() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-end mb-5">
             <select
+              aria-label="Sort products"
               value={filters.sort}
               onChange={(e) => applyFilters({ ...filters, sort: e.target.value })}
               className="input-field font-body"
@@ -103,13 +108,18 @@ export default function Shop() {
             </select>
           </div>
 
-          {error && <p className="text-sm text-stock-out mb-4">{error}</p>}
-
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="aspect-[3/4] rounded border border-border-soft bg-surface animate-pulse" />
               ))}
+            </div>
+          ) : error ? (
+            <div role="alert" className="border border-border-soft rounded p-12 text-center">
+              <p className="text-stock-out">{error}</p>
+              <button type="button" className="btn-secondary mt-4" onClick={() => setRetry((value) => value + 1)}>
+                Try again
+              </button>
             </div>
           ) : products.length === 0 ? (
             <div className="border border-border-soft rounded p-12 text-center">
@@ -124,11 +134,11 @@ export default function Shop() {
             </div>
           )}
 
-          <Pagination
+          {!loading && !error && <Pagination
             page={meta.page}
             pages={meta.pages}
             onChange={(p) => applyFilters({ ...filters, page: String(p) }, { keepPage: true })}
-          />
+          />}
         </div>
       </div>
     </div>

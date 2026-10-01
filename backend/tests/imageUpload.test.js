@@ -39,3 +39,11 @@ describe('MAX_IMAGE_BYTES', () => {
     expect(MAX_IMAGE_BYTES).toBe(5 * 1024 * 1024);
   });
 });
+
+const { imageExtension } = require('../utils/imageUpload');
+it('checks binary signatures rather than trusting the filename or MIME declaration', () => {
+  expect(imageExtension(Buffer.from('<svg onload="alert(1)"></svg>'))).toBeNull();
+  expect(imageExtension(Buffer.from([255, 216, 255, 0]))).toBe('.jpg');
+  expect(imageExtension(Buffer.from([137,80,78,71,13,10,26,10]))).toBe('.png');
+  expect(imageExtension(Buffer.from('RIFF0000WEBP'))).toBe('.webp');
+});

@@ -4,16 +4,10 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useAddresses } from '../context/AddressContext';
 import api from '../lib/api';
+import { useSiteConfig } from '../lib/siteConfig';
 import { formatNPR } from '../utils/format';
-import { SHIPPING_COST, FREE_SHIPPING_THRESHOLD } from '../utils/pricing';
 
 const PROVINCES = ['Koshi', 'Madhesh', 'Bagmati', 'Gandaki', 'Lumbini', 'Karnali', 'Sudurpashchim'];
-
-const PAYMENT_METHODS = [
-  { id: 'cod', label: 'Cash on delivery', hint: 'Pay when your order arrives.' },
-  { id: 'card', label: 'Card (demo)', hint: 'Simulated for this demo — no real charge, no card data stored.' },
-  { id: 'esewa', label: 'eSewa', hint: "You'll be redirected to eSewa's sandbox to complete payment." },
-];
 
 // eSewa needs a real browser POST + redirect (not an XHR) to send the
 // customer to their hosted payment page, so this builds and submits a
@@ -46,6 +40,7 @@ function addressToShipping(a) {
 }
 
 export default function Checkout() {
+  const site = useSiteConfig();
   const { cart, subtotal, itemCount, loading: cartLoading, refresh: refreshCart } = useCart();
   const { user } = useAuth();
   const { addresses, loading: addressesLoading } = useAddresses();
@@ -99,7 +94,7 @@ export default function Checkout() {
     if (found) setAddress(addressToShipping(found));
   }
 
-  const shippingEstimate = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const shippingEstimate = subtotal >= site.freeShippingThreshold ? 0 : site.shippingCost;
   const discountEstimate = appliedCoupon?.discount || 0;
   const totalEstimate = subtotal + shippingEstimate - discountEstimate;
 
@@ -157,6 +152,12 @@ export default function Checkout() {
   if (cartLoading) {
     return <div className="max-w-content mx-auto px-4 sm:px-6 py-16 text-sm text-faint">Loading…</div>;
   }
+
+  if (!site.checkoutEnabled) return <div className="max-w-content mx-auto px-4 sm:px-6 py-16 text-center">
+    <h1 className="font-display text-2xl text-ink">Orders are not open yet</h1>
+    <p className="text-muted mt-3">You can browse parts and plan a build. Checkout will open when the store is ready.</p>
+    <Link to="/shop" className="btn-primary mt-6 inline-flex">Browse parts</Link>
+  </div>;
 
   if (itemCount === 0) {
     return (
@@ -319,7 +320,7 @@ export default function Checkout() {
           <section className="border border-border-soft rounded p-5">
             <h2 className="text-sm font-medium text-ink mb-4">Payment method</h2>
             <div className="space-y-2">
-              {PAYMENT_METHODS.map((m) => (
+              {site.paymentMethods.map((m) => (
                 <label
                   key={m.id}
                   className={`flex items-start gap-3 border rounded p-3 cursor-pointer transition-colors ${

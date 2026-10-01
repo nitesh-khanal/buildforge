@@ -5,31 +5,39 @@ import { formatNPR } from '../utils/format';
 
 export default function SearchBar({ className = '' }) {
   const [query, setQuery] = useState('');
+  const requestVersion = useRef(0);
   const [suggestions, setSuggestions] = useState([]);
   const [open, setOpen] = useState(false);
   const boxRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (query.trim().length < 2) {
-      setSuggestions([]);
-      return;
-    }
+    const version = ++requestVersion.current;
+    setSuggestions([]);
+    setOpen(false);
+    if (query.trim().length < 2) return;
     const handle = setTimeout(async () => {
       try {
         const { data } = await api.get('/products/search/suggestions', { params: { q: query } });
+        if (version !== requestVersion.current) return;
         setSuggestions(data.suggestions);
         setOpen(true);
       } catch {
-        setSuggestions([]);
+        if (version === requestVersion.current) setSuggestions([]);
       }
     }, 250);
-    return () => clearTimeout(handle);
+    return () => {
+      clearTimeout(handle);
+      requestVersion.current++;
+    };
   }, [query]);
 
   useEffect(() => {
     function onClickOutside(e) {
-      if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
+      if (boxRef.current && !boxRef.current.contains(e.target)) {
+        requestVersion.current++;
+        setOpen(false);
+      }
     }
     document.addEventListener('mousedown', onClickOutside);
     return () => document.removeEventListener('mousedown', onClickOutside);
@@ -38,6 +46,7 @@ export default function SearchBar({ className = '' }) {
   function submit(e) {
     e.preventDefault();
     if (!query.trim()) return;
+    requestVersion.current++;
     setOpen(false);
     navigate(`/shop?search=${encodeURIComponent(query.trim())}`);
   }
@@ -47,8 +56,20 @@ export default function SearchBar({ className = '' }) {
       <form onSubmit={submit} className="relative">
         <input
           type="search"
+          aria-label="Search PC parts"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              requestVersion.current++;
+              setOpen(false);
+            }
+          }}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            requestVersion.current++;
+            setSuggestions([]);
+            setOpen(false);
+            setQuery(e.target.value);
+          }}
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           placeholder="Search parts — RTX 4070, AM5, 650W…"
           className="input-field w-full pr-9"
@@ -72,6 +93,7 @@ export default function SearchBar({ className = '' }) {
               key={p._id}
               type="button"
               onClick={() => {
+                requestVersion.current++;
                 setOpen(false);
                 setQuery('');
                 navigate(`/products/${p._id}`);

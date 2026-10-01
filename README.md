@@ -46,6 +46,10 @@ frontend/    React + Vite + Tailwind SPA
 ROADMAP.md   Phase-by-phase build log
 ```
 
+## Launch preparation
+
+See [LAUNCH.md](LAUNCH.md) for HTTPS deployment, production settings, SEO, optional analytics, backups and launch checks. See [CATALOG.md](CATALOG.md) for supplier data and photo sourcing. The admin catalog import screen includes templates, manufacturer references and photo uploads. Production orders stay closed until you configure actual business details and import verified inventory.
+
 ## Setup
 
 ### 1. Backend

@@ -6,6 +6,17 @@
 const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
+const fs = require('fs');
+const { imageExtension } = require('../utils/imageUpload');
+const mimeExtensions = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
+function verifyPhoto(req) {
+  if (!req.file) return;
+  const signature = imageExtension(fs.readFileSync(req.file.path));
+  if (!signature || signature !== mimeExtensions[req.file.mimetype]) {
+    fs.unlinkSync(req.file.path);
+    throw new Error('The file is not a valid JPEG, PNG or WEBP photo.');
+  }
+}
 const { isAllowedImageMime, MAX_IMAGE_BYTES } = require('../utils/imageUpload');
 
 // Phase 11: the mime/size rule itself now lives in utils/imageUpload.js —
@@ -22,7 +33,7 @@ function fileFilter(req, file, cb) {
 const productStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, '..', 'uploads')),
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    const ext = mimeExtensions[file.mimetype];
     const unique = crypto.randomBytes(16).toString('hex');
     cb(null, `product-${unique}${ext}`);
   },
@@ -43,7 +54,7 @@ function handleProductImageUpload(req, res, next) {
       res.status(400);
       return next(new Error(err.message || 'Image upload failed.'));
     }
-    next();
+    try { verifyPhoto(req); next(); } catch (error) { res.status(400); next(error); }
   });
 }
 
@@ -58,8 +69,8 @@ function handleProductImageUpload(req, res, next) {
 const categoryStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, '..', 'uploads')),
   filename: (req, file, cb) => {
-    const slug = req.params.slug || 'category';
-    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    const slug = /^[a-z0-9-]+$/.test(req.params.slug || '') ? req.params.slug : 'category';
+    const ext = mimeExtensions[file.mimetype];
     cb(null, `category-${slug}-${Date.now()}${ext}`);
   },
 });
@@ -76,7 +87,7 @@ function handleCategoryImageUpload(req, res, next) {
       res.status(400);
       return next(new Error(err.message || 'Image upload failed.'));
     }
-    next();
+    try { verifyPhoto(req); next(); } catch (error) { res.status(400); next(error); }
   });
 }
 

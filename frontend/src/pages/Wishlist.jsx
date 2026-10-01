@@ -7,7 +7,7 @@ import { formatNPR } from '../utils/format';
 import StockBadge from '../components/StockBadge';
 
 function apiOrigin() {
-  return import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+  return new URL(import.meta.env.VITE_API_URL || '/api', window.location.origin).origin;
 }
 
 function WishlistRow({ item, onRemoved, onMoved }) {
@@ -49,7 +49,8 @@ function WishlistRow({ item, onRemoved, onMoved }) {
           alt={product.name}
           className="w-full h-full object-cover"
           onError={(e) => {
-            e.currentTarget.style.display = 'none';
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = '/placeholder.svg';
           }}
         />
       </Link>
