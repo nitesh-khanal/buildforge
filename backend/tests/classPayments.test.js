@@ -27,6 +27,41 @@ describe('classroom payment simulations', () => {
     const declined=ledger.authorize({amountMinor:10000,cardScenario:'declined'});
     expect(()=>ledger.capture(declined.id)).toThrow('authorized');
   });
+  it('settles a Khalti-style demo only after the approved test code, once', () => {
+    const ledger = new ClassPayments();
+    const payment = ledger.initiateExternal({ provider: 'khalti', amountMinor: 25000 });
+    expect(payment.status).toBe('pending');
+    expect(() => ledger.confirmExternal(payment.id, { code: '999999' })).toThrow('Invalid demo code');
+    expect(ledger.transactions).toHaveLength(0);
+    const completed = ledger.confirmExternal(payment.id, { code: '123456' });
+    expect(completed.status).toBe('completed');
+    expect(completed.transaction.amountMinor).toBe(25000);
+    expect(ledger.confirmExternal(payment.id, { code: '123456' })).toBe(completed);
+    expect(ledger.transactions).toHaveLength(1);
+  });
+  it('declines a Khalti-style test payment without producing a receipt', () => {
+    const ledger = new ClassPayments();
+    const payment = ledger.initiateExternal({ provider: 'khalti', amountMinor: 25000 });
+    expect(ledger.confirmExternal(payment.id, { code: '000000' }).status).toBe('failed');
+    expect(() => ledger.confirmExternal(payment.id, { code: '123456' })).toThrow();
+    expect(ledger.transactions).toHaveLength(0);
+  });
+  it('requires the matching bank reference and records a single demo receipt', () => {
+    const ledger = new ClassPayments();
+    const payment = ledger.initiateExternal({ provider: 'bank', amountMinor: 35000 });
+    expect(() => ledger.confirmExternal(payment.id, { reference: 'wrong' })).toThrow('does not match');
+    expect(ledger.transactions).toHaveLength(0);
+    const completed = ledger.confirmExternal(payment.id, { reference: payment.reference });
+    expect(completed.status).toBe('completed');
+    expect(completed.transaction.type).toBe('bank-demo-payment');
+    ledger.confirmExternal(payment.id, { reference: payment.reference });
+    expect(ledger.transactions).toHaveLength(1);
+  });
+  it('rejects unsupported providers and invalid payment amounts', () => {
+    const ledger = new ClassPayments();
+    expect(() => ledger.initiateExternal({ provider: 'unknown', amountMinor: 1000 })).toThrow();
+    expect(() => ledger.initiateExternal({ provider: 'bank', amountMinor: 0 })).toThrow();
+  });
   it('verifies original signatures and rejects changed transaction amounts', () => {
     const {privateKey,publicKey}=crypto.generateKeyPairSync('rsa',{modulusLength:2048});
     const transaction={demo:true,amountMinor:10000,currency:'NPR'};

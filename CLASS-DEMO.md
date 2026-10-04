@@ -56,8 +56,14 @@ This is local classroom TLS, not a publicly trusted website certificate. Public 
 - Select the declining dummy token ending 0002 to demonstrate a decline. Declined payments cannot be captured.
 - Repeated capture does not create a second transaction. No real PAN, expiry, or CVV is accepted or stored; tokenization is simulated rather than a PCI-certified gateway integration.
 
+## Additional demo: Khalti-style and bank payments
+
+- On `/security-demo`, start a simulated Khalti payment using the amount in the wallet panel. Enter `123456` to approve or `000000` to decline. Only approval creates a signed demo receipt. An invalid code leaves the payment pending; repeated confirmation does not create another receipt.
+- Start a simulated bank transfer. The page generates a unique demo reference. Copy that exact reference into the confirmation field to simulate a manual bank-receipt check. An incorrect reference cannot complete the payment. A successful confirmation creates a signed receipt.
+- These simulations do not call Khalti or any bank. The demo has no merchant credentials or real reconciliation, and the bank confirmation is a classroom action rather than proof of bank settlement. The checkout page links here when the local HTTPS demo is running; these actions do not create or pay for a real store order.
+
 ## Limits and validation
 
 Wallet balances, payment states, recent records, request IDs and RSA keys live in this single demo server's memory and reset on restart. These are intentionally isolated classroom simulations, not persistent production financial accounts. Do not expose the demo server through a public tunnel. Real wallets require durable transactional accounting, authenticated account ownership and payment-provider integration.
 
-Validation: unit tests cover value conservation, insufficient balances, invalid transfers, duplicate transfer prevention, authorization/capture/decline rules, repeated capture and signature tampering. HTTPS verification uses the generated certificate as an explicit trust anchor; certificate validation is never disabled.
+Validation: unit tests cover value conservation, insufficient balances, invalid transfers, duplicate transfer prevention, authorization/capture/decline rules, Khalti-style verification and bank reference matching, repeated settlement prevention and signature tampering. HTTPS verification uses the generated certificate as an explicit trust anchor; certificate validation is never disabled.

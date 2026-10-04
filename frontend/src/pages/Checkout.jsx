@@ -344,6 +344,12 @@ export default function Checkout() {
               ))}
             </div>
 
+            {window.location.protocol === 'https:' && window.location.port === '5443' && (
+              <p className="text-xs text-muted mt-4">
+                For the classroom demo, <Link to="/security-demo" className="text-accent underline">try simulated Khalti and bank payments</Link>. They do not place or pay for this order.
+              </p>
+            )}
+
             {paymentMethod === 'card' && (
               <div className="grid sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border-soft">
                 <div className="sm:col-span-2">

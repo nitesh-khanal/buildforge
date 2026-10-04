@@ -142,4 +142,4 @@ The PC Builder includes an optional AI advice panel. Add `GEMINI_API_KEY` to the
 
 ### Classroom payment and security labs
 
-See [CLASS-DEMO.md](CLASS-DEMO.md) for local HTTPS checkout, SHA-256 hashing, RSA-PSS signatures, stored-value wallet transfers, and a dummy card authorization/capture/decline flow. These labs are development-only simulations, with no real money or card credentials.
+See [CLASS-DEMO.md](CLASS-DEMO.md) for local HTTPS checkout, SHA-256 hashing, RSA-PSS signatures, stored-value wallet transfers, a dummy card authorization/capture/decline flow, and Khalti-style and bank-transfer simulations. These labs are development-only simulations, with no real money or card credentials.

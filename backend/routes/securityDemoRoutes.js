@@ -17,4 +17,9 @@ router.post('/gateway/:id/capture', action(req => {
   const payment = ledger.capture(req.params.id);
   return { payment, proof: proof(payment.transaction) };
 }));
+router.post('/external/initiate', action(req => ({ payment: ledger.initiateExternal(req.body) })));
+router.post('/external/:id/confirm', action(req => {
+  const payment = ledger.confirmExternal(req.params.id, req.body);
+  return { payment, proof: payment.transaction ? proof(payment.transaction) : null };
+}));
 module.exports = router;

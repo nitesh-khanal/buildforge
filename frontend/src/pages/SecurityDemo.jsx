@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../lib/api';
 import { formatNPR } from '../utils/format';
+import ExternalPaymentDemo from '../components/security/ExternalPaymentDemo';
 const canonicalize = value => Array.isArray(value) ? '[' + value.map(canonicalize).join(',') + ']' : value && typeof value === 'object' ? '{' + Object.keys(value).sort().map(k => JSON.stringify(k) + ':' + canonicalize(value[k])).join(',') + '}' : JSON.stringify(value);
 const bytes = base64 => Uint8Array.from(atob(base64), c => c.charCodeAt(0));
 
@@ -33,7 +34,7 @@ export default function SecurityDemo() {
     });
   }
   return <main className="max-w-content mx-auto px-4 sm:px-6 py-10 space-y-6">
-    <div><h1 className="text-2xl font-semibold">E-payment classroom lab</h1><p className="text-muted mt-2">Simulated funds and dummy cards only. No real payment is processed. Demo balances and signing keys reset when this server restarts.</p></div>
+    <div><h1 className="text-2xl font-semibold">E-payment classroom lab</h1><p className="text-muted mt-2">Simulated funds and dummy payments only. No real payment is processed. Demo balances and signing keys reset when this server restarts.</p></div>
     <section className="border border-border-soft rounded p-5"><h2 className="font-semibold">SSL/TLS checkout</h2><p className="mt-2">{secure ? 'This page uses HTTPS: traffic between the browser and this server is encrypted with TLS.' : 'This page uses HTTP. Open https://localhost:5443/security-demo for the TLS demonstration.'}</p><p className="text-sm text-muted mt-2">Certificate trust must be verified separately in the browser. Inspect the connection and certificate details to show the issuer, localhost identity, and expiry.</p><a href="/checkout" className="btn-secondary mt-3">Open checkout on this connection</a></section>
     {error && <p role="alert" className="text-stock-out">{error}</p>}
     <div className="grid md:grid-cols-2 gap-6">
@@ -52,6 +53,10 @@ export default function SecurityDemo() {
           {payment.status==='authorized' && <button className="btn-primary mt-3" disabled={busy} onClick={()=>run(async()=>{const {data}=await api.post(`/security-demo/gateway/${payment.id}/capture`);setPayment(data.payment);loadProof(data.proof);})}>Capture authorized payment</button>}
         </div>}
       </section>
+    </div>
+    <div className="grid md:grid-cols-2 gap-6">
+      <ExternalPaymentDemo provider="khalti" amountMinor={amountMinor} onProof={loadProof} />
+      <ExternalPaymentDemo provider="bank" amountMinor={amountMinor} onProof={loadProof} />
     </div>
     {proof && <section className="border border-border-soft rounded p-5 space-y-4"><h2 className="font-semibold">Transaction hashing and digital signature</h2><p className="text-sm text-muted">The server hashes canonical transaction JSON using SHA-256 and signs it with a private RSA key. Your browser verifies with the public key. Editing the amount below changes the hash and invalidates the signature.</p>
       <label className="block text-sm">Transaction data<textarea className="input-field w-full font-mono mt-2" rows="9" value={text} onChange={e=>{setText(e.target.value);setVerification(null);}} /></label>
