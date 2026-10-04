@@ -270,6 +270,7 @@ export default function Build() {
       {pickerSlot && (
         <PartPickerModal
           slot={pickerSlot}
+          components={componentIds(selected)}
           currentProductId={selected[pickerSlot]?._id}
           onSelect={handlePick}
           onClose={() => setPickerSlot(null)}
