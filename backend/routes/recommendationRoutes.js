@@ -20,6 +20,13 @@ router.post('/complete-build', getBuildCompletions);
 router.get('/for-you', optionalAuth, getForYou);
 
 // Optional Gemini-powered blurb; safe to call even when disabled.
-router.post('/build-advice', getBuildAdvice);
+router.get('/ai-status', (req, res) => res.json({
+  success: true, enabled: require('../services/geminiService').isEnabled(),
+}));
+const { rateLimit } = require('express-rate-limit');
+router.post('/build-advice', rateLimit({
+  windowMs: 60 * 1000, limit: 5, standardHeaders: true, legacyHeaders: false,
+  message: { success: false, message: 'Please wait a minute before requesting more AI advice.' },
+}), getBuildAdvice);
 
 module.exports = router;

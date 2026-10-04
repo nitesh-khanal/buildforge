@@ -137,16 +137,32 @@ const getForYou = asyncHandler(async (req, res) => {
   res.json({ success: true, personalized: true, products });
 });
 
-// POST /api/recommendations/build-advice
-// Body: { components, report } — usually the exact response of
-// /api/builds/check, forwarded straight through. Optional Gemini layer;
-// returns { enabled: false, advice: null } if GEMINI_API_KEY isn't set, so
-// the frontend can just hide the section rather than treat it as an error.
+// Resolve catalog IDs and calculate compatibility on the server before AI advice.
 const getBuildAdvice = asyncHandler(async (req, res) => {
-  if (!geminiEnabled()) {
-    return res.json({ success: true, enabled: false, advice: null });
+  if (!geminiEnabled()) return res.json({ success: true, enabled: false, advice: null });
+  const ids = req.body.components;
+  const validId = require('mongoose').isValidObjectId;
+  if (!ids || Array.isArray(ids) || typeof ids !== 'object' ||
+      Object.entries(ids).some(([slot, id]) => !ALL_SLOTS.includes(slot) || !validId(id))) {
+    res.status(400);
+    throw new Error('Choose valid catalog parts for your build.');
   }
-  const { components, report } = req.body;
+  const products = await Product.findActive({ _id: { $in: Object.values(ids) } });
+  const byId = new Map(products.map(p => [String(p._id), p]));
+  const components = {};
+  for (const [slot, id] of Object.entries(ids)) {
+    const product = byId.get(String(id));
+    if (!product || product.category !== slot) {
+      res.status(400);
+      throw new Error('A selected part is unavailable. Update your build and try again.');
+    }
+    components[slot] = product;
+  }
+  if (!products.length) {
+    res.status(400);
+    throw new Error('Choose at least one part first.');
+  }
+  const report = require('../services/compatibilityService').checkBuildCompatibility(components);
   const advice = await generateBuildAdvice({ components, report });
   res.json({ success: true, enabled: true, advice });
 });

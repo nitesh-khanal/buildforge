@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { formatNPR } from '../utils/format';
 import { CATEGORY_LABELS } from '../utils/specs';
 import BuildSlotRow from '../components/build/BuildSlotRow';
+import AIBuildAdvice from '../components/build/AIBuildAdvice';
 import PartPickerModal from '../components/build/PartPickerModal';
 import CompatibilityPanel from '../components/build/CompatibilityPanel';
 import MyBuildsSection from '../components/build/MyBuildsSection';
@@ -262,6 +263,7 @@ export default function Build() {
             addState={addState}
             myBuilds={<MyBuildsSection onLoadBuild={handleLoadBuild} refreshSignal={refreshSignal} />}
           />
+          <AIBuildAdvice components={componentIds(selected)} />
         </div>
       </div>
 

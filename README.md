@@ -135,3 +135,7 @@ Before shipping for real:
   public deployment.
 - Get real eSewa production credentials (`ESEWA_MERCHANT_ID` /
   `ESEWA_SECRET_KEY`) — the sandbox defaults only work against UAT.
+
+### AI build advisor
+
+The PC Builder includes an optional AI advice panel. Add `GEMINI_API_KEY` to the backend environment and restart the backend to enable it. `GEMINI_MODEL` can select another supported text model (default `gemini-3.8-flash`; see [Google's model list](https://ai.google.dev/gemini-api/docs/models)). Keep the key on the backend; never use a `VITE_` variable for it. Without a key, the panel explains that AI is inactive while compatibility checks and recommendations still work. Advice is requested only when the shopper clicks, and changing parts clears the previous advice. Catalog parts and compatibility are resolved on the server; generation times out after 15 seconds and is limited to five requests per minute per IP.
