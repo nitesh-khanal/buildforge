@@ -6,6 +6,7 @@ import { useCompare } from '../context/CompareContext';
 import { useAuth } from '../context/AuthContext';
 import { CATEGORY_LABELS } from '../utils/specs';
 import SearchBar from './SearchBar';
+import BrandLogo from './BrandLogo';
 import NotificationBell from './NotificationBell';
 
 const CATEGORIES = Object.entries(CATEGORY_LABELS);
@@ -91,8 +92,8 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 bg-base/95 backdrop-blur border-b border-border-soft">
       <div className="max-w-content mx-auto px-4 sm:px-6">
         <div className="flex items-center gap-4 sm:gap-8 h-16">
-          <Link to="/" className="font-display font-semibold text-lg text-ink tracking-tight shrink-0">
-            Build<span className="text-accent">Forge</span>
+          <Link to="/" className="inline-flex items-center shrink-0">
+            <BrandLogo />
           </Link>
 
           <SearchBar className="flex-1 max-w-xl hidden sm:block" />

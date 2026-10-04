@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import BrandLogo from './BrandLogo';
 import { useSiteConfig } from '../lib/siteConfig';
 
 export default function Footer() {
@@ -8,7 +9,7 @@ export default function Footer() {
       <div className="max-w-content mx-auto px-4 sm:px-6 py-10 flex flex-col sm:flex-row justify-between gap-6 text-sm text-faint">
         <div>
           <p className="font-display text-ink font-semibold">
-            Build<span className="text-accent">Forge</span>
+            <BrandLogo />
           </p>
           <p className="mt-1 max-w-xs">PC parts and custom builds, checked for compatibility before they reach your cart.</p>
         </div>
