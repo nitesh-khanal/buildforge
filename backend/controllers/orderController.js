@@ -8,6 +8,7 @@ const CouponUsage = require('../models/CouponUsage');
 const asyncHandler = require('../utils/asyncHandler');
 const generateOrderId = require('../utils/generateOrderId');
 const esewaService = require('../services/esewaService');
+const khaltiService = require('../services/khaltiService');
 const orderNotificationService = require('../services/orderNotificationService');
 const notificationService = require('../services/notificationService');
 const emailService = require('../services/emailService');
@@ -74,7 +75,7 @@ const createOrder = asyncHandler(async (req, res) => {
     throw new Error('This payment method is unavailable.');
   }
   validateShippingAddress(shippingAddress);
-  if (!['card', 'cod', 'esewa'].includes(paymentMethod)) {
+  if (!['card', 'cod', 'esewa', 'khalti', 'bank'].includes(paymentMethod)) {
     res.status(400);
     throw new Error('Invalid payment method.');
   }
@@ -161,6 +162,8 @@ const createOrder = asyncHandler(async (req, res) => {
       res.status(402);
       throw new Error('Payment could not be completed. Please check your card details or try another payment method.');
     }
+  } else if (paymentMethod === 'khalti' || paymentMethod === 'bank') {
+    paymentStatus = 'Pending';
   } else if (paymentMethod === 'esewa') {
     // Real gateway: stays Pending until eSewa's redirect callback (or a
     // manual status check) confirms it — see esewaSuccessCallback below.
@@ -182,6 +185,7 @@ const createOrder = asyncHandler(async (req, res) => {
             shippingAddress,
             paymentMethod,
             paymentStatus,
+            bankDetails: paymentMethod === 'bank' ? config.bankTransfer : undefined,
             orderStatus: 'Pending',
             subtotal,
             shippingCost,
@@ -256,6 +260,20 @@ const createOrder = asyncHandler(async (req, res) => {
     esewaPayment = esewaService.buildPaymentPayload(order, { backendUrl: backendUrl() });
   }
 
+  let khaltiPayment = null;
+  let khaltiError = null;
+  if (paymentMethod === 'khalti') {
+    try {
+      khaltiPayment = await khaltiService.initiate(order, {
+        backendUrl: backendUrl(), clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+      });
+      order.khaltiDetails = { pidx: khaltiPayment.pidx, status: 'Initiated', mock: khaltiPayment.mock };
+      await order.save();
+    } catch (error) {
+      khaltiError = 'The order was placed, but Khalti could not start. Open your order and retry the payment.';
+    }
+  }
+
   // In-app "order placed" notification (Phase 4) — fired for every order
   // regardless of payment method/status, separate from the email/shipping
   // side effects below which only fire once a payment is actually
@@ -274,7 +292,69 @@ const createOrder = asyncHandler(async (req, res) => {
     }
   }
 
-  res.status(201).json({ success: true, order, esewaPayment });
+  res.status(201).json({ success: true, order, esewaPayment, khaltiPayment, khaltiError });
+});
+
+// A Khalti browser return is untrusted. Only the server-side lookup can pay the order.
+async function reconcileKhalti(order) {
+  if (!order.khaltiDetails?.pidx || order.khaltiDetails.mock) return order;
+  const result = await khaltiService.lookup(order.khaltiDetails.pidx);
+  if (!khaltiService.matches(order, result)) return order;
+  const updated = await Order.findOneAndUpdate(
+    { _id: order._id, paymentMethod: 'khalti', paymentStatus: 'Pending', 'khaltiDetails.pidx': result.pidx },
+    { $set: { paymentStatus: 'Paid', 'khaltiDetails.status': 'Completed', 'khaltiDetails.transactionId': result.transactionId, 'khaltiDetails.verifiedAt': new Date() } },
+    { new: true }
+  );
+  if (!updated) return Order.findById(order._id);
+  updated.notifications = await orderNotificationService.notifyOrderConfirmed(updated);
+  await updated.save();
+  await notificationService.notifyPaymentSuccessful(Notification, updated);
+  return updated;
+}
+const khaltiReturn = asyncHandler(async (req, res) => {
+  const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
+  const orderId = typeof req.query.purchase_order_id === 'string' ? req.query.purchase_order_id : '';
+  if (!/^BF-[A-Z0-9-]{1,100}$/.test(orderId)) return res.redirect(`${clientUrl}/order-confirmation?status=invalid`);
+  const order = await Order.findOne({ orderId, paymentMethod: 'khalti' });
+  if (!order || !order.khaltiDetails?.pidx || req.query.pidx !== order.khaltiDetails.pidx) return res.redirect(`${clientUrl}/order-confirmation?status=invalid`);
+  try {
+    const checked = await reconcileKhalti(order);
+    return res.redirect(`${clientUrl}/order-confirmation/${orderId}?status=${checked.paymentStatus === 'Paid' ? 'success' : 'pending'}`);
+  } catch {
+    return res.redirect(`${clientUrl}/order-confirmation/${orderId}?status=verification_error`);
+  }
+});
+const checkKhaltiStatus = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id);
+  if (!order || (String(order.user) !== String(req.user._id) && req.user.role !== 'admin')) {
+    res.status(404); throw new Error('Order not found.');
+  }
+  if (order.paymentMethod !== 'khalti') { res.status(400); throw new Error('This is not a Khalti order.'); }
+  if (order.paymentStatus === 'Paid') return res.json({ success: true, order });
+  if (!order.khaltiDetails?.pidx) {
+    const payment = await khaltiService.initiate(order, { backendUrl: backendUrl(), clientUrl: process.env.CLIENT_URL || 'http://localhost:5173' });
+    order.khaltiDetails = { pidx: payment.pidx, status: 'Initiated', mock: payment.mock };
+    await order.save();
+    return res.json({ success: true, order, khaltiPayment: payment });
+  }
+  const checked = await reconcileKhalti(order);
+  res.json({ success: true, order: checked });
+});
+const completeLocalKhalti = asyncHandler(async (req, res) => {
+  if (process.env.NODE_ENV === 'production' || !khaltiService.isLocalMock()) return res.sendStatus(404);
+  const order = await Order.findOne({ orderId: req.params.orderId, user: req.user._id, paymentMethod: 'khalti' });
+  if (!order || order.khaltiDetails?.pidx !== `local-${order.orderId}`) return res.sendStatus(404);
+  if (order.paymentStatus === 'Paid') return res.json({ success: true, order });
+  if (order.paymentStatus !== 'Pending' || req.body.choice !== 'approve') {
+    return res.json({ success: true, order });
+  }
+  const updated = await Order.findOneAndUpdate({ _id: order._id, paymentStatus: 'Pending' },
+    { $set: { paymentStatus: 'Paid', 'khaltiDetails.status': 'Completed', 'khaltiDetails.transactionId': `LOCAL-${order.orderId}`, 'khaltiDetails.verifiedAt': new Date() } }, { new: true });
+  if (!updated) return res.json({ success: true, order: await Order.findById(order._id) });
+  updated.notifications = await orderNotificationService.notifyOrderConfirmed(updated);
+  await updated.save();
+  await notificationService.notifyPaymentSuccessful(Notification, updated);
+  res.json({ success: true, order: updated });
 });
 
 // GET /api/orders/esewa/success — eSewa redirects the customer's browser
@@ -463,5 +543,8 @@ module.exports = {
   cancelMyOrder,
   esewaSuccessCallback,
   esewaFailureCallback,
+  khaltiReturn,
+  checkKhaltiStatus,
+  completeLocalKhalti,
   checkEsewaStatus,
 };

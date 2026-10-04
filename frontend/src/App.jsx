@@ -14,6 +14,7 @@ import Build from './pages/Build';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Checkout from './pages/Checkout';
+import KhaltiTest from './pages/KhaltiTest';
 import OrderConfirmation from './pages/OrderConfirmation';
 import OrderHistory from './pages/OrderHistory';
 import OrderDetail from './pages/OrderDetail';
@@ -79,6 +80,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/khalti-test/:orderId" element={<ProtectedRoute><KhaltiTest /></ProtectedRoute>} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/community" element={<Community />} />
           <Route path="/community/builds/:id" element={<CommunityBuildDetail />} />

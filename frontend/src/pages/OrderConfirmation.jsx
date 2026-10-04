@@ -19,7 +19,7 @@ const STATUS_BANNERS = {
   pending: {
     tone: 'text-stock-low',
     title: 'Payment pending',
-    body: "We haven't received final confirmation from eSewa yet — this usually resolves within a few minutes.",
+    body: "Payment is still pending. Follow the instructions below or check its status before expecting dispatch.",
   },
   invalid: {
     tone: 'text-stock-out',
@@ -34,7 +34,7 @@ const STATUS_BANNERS = {
   verification_error: {
     tone: 'text-stock-low',
     title: 'Still verifying',
-    body: "We're still confirming this payment with eSewa. Try the button below in a moment.",
+    body: "We're still confirming this payment. Check its status again in a moment.",
   },
 };
 
@@ -72,7 +72,17 @@ export default function OrderConfirmation() {
     }
   }
 
-  const verifiedStatus = order ? (order.paymentStatus === 'Paid' ? 'success' : order.paymentStatus === 'Failed' ? 'failed' : order.paymentMethod === 'esewa' ? 'pending' : null) : (['invalid', 'not_found', 'verification_error'].includes(status) ? status : null);
+  async function checkKhaltiStatus() {
+    if (!order) return;
+    setChecking(true); setError(null);
+    try {
+      const { data } = await api.get(`/orders/${order._id}/khalti-status`);
+      setOrder(data.order);
+      if (data.khaltiPayment?.payment_url) window.location.assign(data.khaltiPayment.payment_url);
+    } catch (err) { setError(err.message); } finally { setChecking(false); }
+  }
+
+  const verifiedStatus = order ? (order.paymentStatus === 'Paid' ? 'success' : order.paymentStatus === 'Failed' ? 'failed' : ['esewa', 'khalti', 'bank'].includes(order.paymentMethod) ? 'pending' : null) : (['invalid', 'not_found', 'verification_error'].includes(status) ? status : null);
   const banner = verifiedStatus && STATUS_BANNERS[verifiedStatus];
 
   return (
@@ -104,6 +114,22 @@ export default function OrderConfirmation() {
 
       {!loading && !error && order && (
         <>
+          {order.paymentMethod === 'bank' && order.paymentStatus === 'Pending' && order.bankDetails && (
+            <div className="border border-border-soft rounded p-5 mb-6 space-y-2">
+              <h2 className="font-medium">Bank transfer instructions</h2>
+              <p className="text-sm text-muted">Pay exactly {order.total.toLocaleString('en-NP', { style: 'currency', currency: 'NPR' })} and use <strong>{order.orderId}</strong> as the reference. We mark this paid only after confirming the deposit.</p>
+              <p className="text-sm">Bank: {order.bankDetails.bankName}</p>
+              <p className="text-sm">Account name: {order.bankDetails.accountName}</p>
+              <p className="text-sm">Account number: {order.bankDetails.accountNumber}</p>
+              {order.bankDetails.bankName.includes('TEST') && <p className="text-stock-low text-sm">Test instructions only. Do not transfer real money.</p>}
+            </div>
+          )}
+          {order.paymentMethod === 'khalti' && order.paymentStatus === 'Pending' && (
+            <div className="border border-border-soft rounded p-5 mb-6">
+              <p className="text-sm text-muted mb-3">Khalti payment is awaiting verification. The order is not paid yet.</p>
+              <button type="button" onClick={checkKhaltiStatus} disabled={checking} className="btn-secondary">{checking ? 'Checking…' : 'Check or restart Khalti payment'}</button>
+            </div>
+          )}
           <OrderSummaryCard
             order={order}
             onCheckEsewaStatus={

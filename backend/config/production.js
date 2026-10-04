@@ -9,6 +9,13 @@ function productionErrors(env = process.env) {
       if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || url.pathname !== '/' || ['localhost', '127.0.0.1'].includes(url.hostname)) throw new Error();
     } catch { errors.push(`${key} must be a public HTTPS origin (no path or query).`); }
   }
+  if (env.KHALTI_ENABLED === 'true' && env.NODE_ENV === 'production' && (!env.KHALTI_SECRET_KEY || env.KHALTI_TEST_MODE !== 'false')) {
+    errors.push('Live Khalti requires a merchant secret key and KHALTI_TEST_MODE=false.');
+  }
+  if (env.BANK_TRANSFER_ENABLED === 'true' && env.NODE_ENV === 'production' &&
+      (!env.BANK_NAME?.trim() || !env.BANK_ACCOUNT_NAME?.trim() || !env.BANK_ACCOUNT_NUMBER?.trim())) {
+    errors.push('Bank transfer requires real bank name, account name and account number.');
+  }
   if (env.ESEWA_ENABLED === 'true') {
     if (env.ESEWA_TEST_MODE !== 'false' || !env.ESEWA_MERCHANT_ID || env.ESEWA_MERCHANT_ID === 'EPAYTEST' || !env.ESEWA_SECRET_KEY || env.ESEWA_SECRET_KEY === '8gBm/:&EnhH.1/q') errors.push('Live eSewa requires production merchant credentials and ESEWA_TEST_MODE=false.');
   }
@@ -29,6 +36,8 @@ function productionErrors(env = process.env) {
 function paymentMethods(env = process.env) {
   const methods = [{ id: 'cod', label: 'Cash on delivery', hint: 'Pay when your order arrives.' }];
   if (env.NODE_ENV !== 'production') methods.push({ id: 'card', label: 'Card (demo)', hint: 'Simulated payment. Never enter a real card.' });
+  if (env.NODE_ENV !== 'production' || env.KHALTI_ENABLED === 'true') methods.push({ id: 'khalti', label: 'Khalti', hint: env.KHALTI_SECRET_KEY ? (env.KHALTI_TEST_MODE === 'false' ? 'Pay on Khalti.' : 'Khalti sandbox — test payment.') : 'Local checkout sandbox — no charge.' });
+  if (env.NODE_ENV !== 'production' || env.BANK_TRANSFER_ENABLED === 'true') methods.push({ id: 'bank', label: 'Bank transfer', hint: env.NODE_ENV === 'production' ? 'Transfer after placing your order. We confirm receipt before dispatch.' : 'Test bank instructions — do not transfer real money.' });
   if (env.NODE_ENV !== 'production' || env.ESEWA_ENABLED === 'true') methods.push({ id: 'esewa', label: 'eSewa', hint: env.ESEWA_TEST_MODE === 'false' ? 'Pay securely on eSewa.' : 'Sandbox payment — no real charge.' });
   return methods;
 }
@@ -44,6 +53,11 @@ function siteConfig(env = process.env) {
     freeShippingThreshold: Number.isFinite(Number(env.FREE_SHIPPING_THRESHOLD_NPR)) && env.FREE_SHIPPING_THRESHOLD_NPR !== '' ? Number(env.FREE_SHIPPING_THRESHOLD_NPR) : 100000,
     checkoutEnabled: env.NODE_ENV !== 'production' || env.CHECKOUT_ENABLED === 'true',
     paymentMethods: paymentMethods(env),
+    bankTransfer: env.NODE_ENV !== 'production' || env.BANK_TRANSFER_ENABLED === 'true'
+      ? { bankName: env.NODE_ENV === 'production' ? env.BANK_NAME : 'BUILD FORGE TEST BANK — DO NOT PAY',
+          accountName: env.NODE_ENV === 'production' ? env.BANK_ACCOUNT_NAME : 'TEST ACCOUNT',
+          accountNumber: env.NODE_ENV === 'production' ? env.BANK_ACCOUNT_NUMBER : '0000000000' }
+      : null,
     analyticsId: /^G-[A-Z0-9]+$/.test(env.GA_MEASUREMENT_ID || '') ? env.GA_MEASUREMENT_ID : '',
     indexable: env.SITE_INDEXABLE === 'true',
     publicUrl: env.CLIENT_URL || 'http://localhost:5173',

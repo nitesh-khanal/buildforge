@@ -8,6 +8,7 @@ const emailService = require('../services/emailService');
 const notificationService = require('../services/notificationService');
 const { isValidPaymentTransition } = require('../utils/paymentTransitions');
 const { runEsewaSweep } = require('../services/esewaSweepRunner');
+const orderNotificationService = require('../services/orderNotificationService');
 const { ORDER_STATUSES, PAYMENT_STATUSES } = require('../models/Order');
 
 // GET /api/admin/orders — filter by orderStatus/paymentStatus/paymentMethod,
@@ -144,8 +145,14 @@ const updatePaymentStatus = asyncHandler(async (req, res) => {
     throw new Error(`Payment status cannot move from ${order.paymentStatus} to ${paymentStatus}.`);
   }
 
+  const wasPendingBank = order.paymentMethod === 'bank' && order.paymentStatus === 'Pending' && paymentStatus === 'Paid';
   order.paymentStatus = paymentStatus;
   await order.save();
+  if (wasPendingBank) {
+    order.notifications = await orderNotificationService.notifyOrderConfirmed(order);
+    await order.save();
+    await notificationService.notifyPaymentSuccessful(Notification, order);
+  }
   res.json({ success: true, order });
 });
 

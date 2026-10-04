@@ -24,3 +24,10 @@ it('returns public configuration without database, signing or merchant secrets',
   expect(value).not.toContain('hidden-merchant-secret');
   expect(value).not.toContain('hidden-smtp-password');
 });
+
+it('keeps new live payment methods gated on credentials', () => {
+  expect(paymentMethods(env).map(method => method.id)).toEqual(['cod']);
+  expect(productionErrors({ ...env, KHALTI_ENABLED: 'true', KHALTI_TEST_MODE: 'true' }).join(' ')).toMatch(/Live Khalti/);
+  expect(productionErrors({ ...env, BANK_TRANSFER_ENABLED: 'true' }).join(' ')).toMatch(/Bank transfer/);
+  expect(paymentMethods({ ...env, KHALTI_ENABLED: 'true', BANK_TRANSFER_ENABLED: 'true' }).map(method => method.id)).toEqual(['cod', 'khalti', 'bank']);
+});

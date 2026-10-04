@@ -136,6 +136,10 @@ export default function Checkout() {
         couponCode: appliedCoupon?.code || undefined,
       });
 
+      if (data.khaltiPayment?.payment_url) {
+        window.location.assign(data.khaltiPayment.payment_url);
+        return;
+      }
       if (data.esewaPayment) {
         submitEsewaForm(data.esewaPayment);
         return; // browser is navigating to eSewa now

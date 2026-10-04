@@ -92,7 +92,7 @@ const orderSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     items: { type: [orderItemSchema], required: true },
     shippingAddress: { type: shippingAddressSchema, required: true },
-    paymentMethod: { type: String, enum: ['card', 'cod', 'esewa'], required: true },
+    paymentMethod: { type: String, enum: ['card', 'cod', 'esewa', 'khalti', 'bank'], required: true },
     paymentStatus: { type: String, enum: PAYMENT_STATUSES, default: 'Pending' },
     orderStatus: { type: String, enum: ORDER_STATUSES, default: 'Pending' },
     subtotal: { type: Number, required: true },
@@ -104,6 +104,8 @@ const orderSchema = new mongoose.Schema(
     couponCode: { type: String, default: null },
     total: { type: Number, required: true },
     esewaDetails: { type: esewaDetailsSchema, default: undefined },
+    khaltiDetails: { pidx: String, transactionId: String, status: String, verifiedAt: Date, mock: Boolean },
+    bankDetails: { bankName: String, accountName: String, accountNumber: String },
     notifications: { type: notificationsSchema, default: () => ({}) },
     // Phase 9 (Delivery): a plain estimate shown to the customer — there is
     // no real courier integration to pull a live ETA from (see

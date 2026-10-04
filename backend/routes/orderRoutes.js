@@ -9,6 +9,7 @@ const {
   esewaSuccessCallback,
   esewaFailureCallback,
   checkEsewaStatus,
+  khaltiReturn, checkKhaltiStatus, completeLocalKhalti,
 } = require('../controllers/orderController');
 
 // eSewa's redirect callbacks hit these directly from the customer's
@@ -18,6 +19,7 @@ const {
 // the `protect` gate below.
 router.get('/esewa/success', esewaSuccessCallback);
 router.get('/esewa/failure', esewaFailureCallback);
+router.get('/khalti/return', khaltiReturn);
 
 // All other order routes require authentication (business rule #2: login
 // is mandatory for checkout and order history).
@@ -28,5 +30,7 @@ router.get('/', getMyOrders);
 router.get('/:id', getOrderById);
 router.patch('/:id/cancel', cancelMyOrder);
 router.get('/:id/esewa-status', checkEsewaStatus);
+router.get('/:id/khalti-status', checkKhaltiStatus);
+router.post('/khalti-local/:orderId', completeLocalKhalti);
 
 module.exports = router;

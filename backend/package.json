@@ -12,7 +12,7 @@
     "test:unit": "jest --runInBand --testPathIgnorePatterns=\"auth.test.js|integration.test.js\"",
     "admin:create": "node scripts/createAdmin.js",
     "launch:check": "node scripts/checkLaunch.js",
-    "test:integration": "jest --runInBand tests/auth.test.js tests/catalog.integration.test.js",
+    "test:integration": "jest --runInBand tests/auth.test.js tests/catalog.integration.test.js tests/checkoutMethods.integration.test.js",
     "demo:tls:setup": "node scripts/setupClassTls.js",
     "demo:https": "node scripts/classServer.js"
   },
