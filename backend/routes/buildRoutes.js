@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect } = require('../middleware/auth');
 const {
   checkCompatibility,
+  previewParts,
   saveBuild,
   getMyBuilds,
   getBuildById,
@@ -13,6 +14,7 @@ const {
 // Public — the builder and compatibility checking work without an account
 // (spec section 3). Only *saving* a build requires login.
 router.post('/check', checkCompatibility);
+router.post('/preview-parts', previewParts);
 
 router.use(protect);
 router.post('/', saveBuild);

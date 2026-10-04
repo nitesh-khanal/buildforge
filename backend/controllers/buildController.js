@@ -52,6 +52,42 @@ const checkCompatibility = asyncHandler(async (req, res) => {
   });
 });
 
+// Batch preview for the visible picker page; no AI or per-card requests.
+const previewParts = asyncHandler(async (req, res) => {
+  const { slot, candidateIds, components = {} } = req.body;
+  const validId = require('mongoose').isValidObjectId;
+  if (!CATEGORY_KEYS.includes(slot) || !Array.isArray(candidateIds) || candidateIds.length > 24 ||
+      candidateIds.some(id => !validId(id)) || !components || typeof components !== 'object' || Array.isArray(components) ||
+      Object.entries(components).some(([key, id]) => !CATEGORY_KEYS.includes(key) || !validId(id))) {
+    res.status(400); throw new Error('Invalid part preview request.');
+  }
+  const selected = await loadComponents(components);
+  const candidates = await Product.findActive({ _id: { $in: candidateIds }, category: slot });
+  const relevant = {
+    'cpu-motherboard': ['cpu', 'motherboard'], 'ram-motherboard': ['ram', 'motherboard'],
+    'motherboard-case': ['motherboard', 'case'], 'gpu-case': ['gpu', 'case'],
+    'cooler-cpu': ['cpu-cooler', 'cpu'], 'cooler-case': ['cpu-cooler', 'case'],
+    'cooler-cpu-tdp': ['cpu-cooler', 'cpu'], 'psu-power': CATEGORY_KEYS,
+    'psu-case': ['psu', 'case'],
+  };
+  const baseline = checkBuildCompatibility({ ...selected, [slot]: null });
+  const previews = {};
+  for (const candidate of candidates) {
+    const report = checkBuildCompatibility({ ...selected, [slot]: candidate });
+    const issues = report.issues.filter(issue => {
+      if (!(relevant[issue.category] || []).includes(slot)) return false;
+      if (issue.category === 'psu-power' && slot !== 'psu') {
+        return !baseline.issues.some(old => old.category === issue.category && old.message === issue.message);
+      }
+      return true;
+    });
+    previews[String(candidate._id)] = {
+      status: issues.some(i => i.level === 'error') ? 'error' : issues.length ? 'warning' : 'compatible', issues,
+    };
+  }
+  res.json({ success: true, previews });
+});
+
 // POST /api/builds — save a build. Requires login (saved builds are
 // per-account, spec section 42).
 const saveBuild = asyncHandler(async (req, res) => {
@@ -152,6 +188,7 @@ const deleteBuild = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  previewParts,
   checkCompatibility,
   saveBuild,
   getMyBuilds,

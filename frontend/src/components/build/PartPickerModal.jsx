@@ -16,7 +16,7 @@ const SORT_OPTIONS = [
   { value: 'rating', label: 'Top rated' },
 ];
 
-function PickerCard({ product, onSelect }) {
+function PickerCard({ product, preview, checkingPreview, onSelect }) {
   const specs = getSpecEntries(product, { limit: 3 });
   const outOfStock = product.stockStatus === 'out-of-stock';
 
@@ -25,13 +25,13 @@ function PickerCard({ product, onSelect }) {
       type="button"
       onClick={() => onSelect(product)}
       disabled={outOfStock}
-      className="text-left flex flex-col border border-border-soft hover:border-accent bg-surface rounded transition-colors disabled:opacity-50 disabled:hover:border-border-soft disabled:cursor-not-allowed"
+      className={`text-left flex flex-col border hover:border-accent bg-surface rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${preview?.status === 'error' ? 'border-stock-out' : preview?.status === 'warning' ? 'border-stock-low' : 'border-border-soft'}`}
     >
       <div className="aspect-[4/3] bg-raised border-b border-border-soft flex items-center justify-center overflow-hidden">
         <img
           src={product.image?.startsWith('http') ? product.image : `${apiOrigin()}${product.image}`}
           alt={product.name}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           onError={(e) => {
             e.currentTarget.onerror = null;
             e.currentTarget.src = '/placeholder.svg';
@@ -55,13 +55,21 @@ function PickerCard({ product, onSelect }) {
             ))}
           </dl>
         )}
+        <div className="text-xs mt-2" aria-live="polite">
+          {checkingPreview ? <p className="text-faint">Checking compatibility…</p> : preview ? <>
+            <p className={preview.status === 'error' ? 'text-stock-out' : preview.status === 'warning' ? 'text-stock-low' : 'text-stock-in'}>
+              {preview.status === 'error' ? 'Incompatible with your selection' : preview.status === 'warning' ? 'Compatibility warning' : 'No conflicts found with selected parts'}
+            </p>
+            {preview.issues.map((issue, i) => <p key={i} className="mt-1 text-muted leading-relaxed">{issue.message}</p>)}
+          </> : <p className="text-faint">Compatibility not checked</p>}
+        </div>
         <span className="font-display font-semibold text-ink mt-1">{formatNPR(product.price)}</span>
       </div>
     </button>
   );
 }
 
-export default function PartPickerModal({ slot, currentProductId, onSelect, onClose }) {
+export default function PartPickerModal({ slot, components, currentProductId, onSelect, onClose }) {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('');
   const [page, setPage] = useState(1);
@@ -69,6 +77,22 @@ export default function PartPickerModal({ slot, currentProductId, onSelect, onCl
   const [meta, setMeta] = useState({ total: 0, pages: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [previews, setPreviews] = useState({});
+  const [checkingPreview, setCheckingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState(false);
+  const selectionKey = JSON.stringify(components);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPreviews({}); setPreviewError(false);
+    if (loading || !products.length) { setCheckingPreview(false); return; }
+    setCheckingPreview(true);
+    api.post('/builds/preview-parts', { slot, components: JSON.parse(selectionKey), candidateIds: products.map(p => p._id) })
+      .then(({ data }) => { if (!cancelled) setPreviews(data.previews); })
+      .catch(() => { if (!cancelled) setPreviewError(true); })
+      .finally(() => { if (!cancelled) setCheckingPreview(false); });
+    return () => { cancelled = true; };
+  }, [slot, selectionKey, products, loading]);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,6 +150,8 @@ export default function PartPickerModal({ slot, currentProductId, onSelect, onCl
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
+          <p className="text-xs text-muted mb-3">Compatibility is checked against your selected parts. Red indicates a conflict; yellow indicates a warning. You can still choose a part to revise your build.</p>
+          {previewError && <p className="text-xs text-stock-low mb-3">Compatibility previews are unavailable. Your build will be checked after selection.</p>}
           {error && <p className="text-sm text-stock-out mb-4">{error}</p>}
 
           {loading ? (
@@ -145,6 +171,8 @@ export default function PartPickerModal({ slot, currentProductId, onSelect, onCl
                 <PickerCard
                   key={p._id}
                   product={p}
+                  preview={previews[p._id]}
+                  checkingPreview={checkingPreview}
                   onSelect={onSelect}
                 />
               ))}
