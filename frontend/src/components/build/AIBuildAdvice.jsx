@@ -45,7 +45,7 @@ export default function AIBuildAdvice({ components }) {
 
   const hasParts = Object.keys(components).length > 0;
   return (
-    <section className="mt-5 border border-border-soft rounded p-5 bg-raised" aria-labelledby="ai-advice-title">
+    <section className="border border-border-soft rounded p-5 bg-raised" aria-labelledby="ai-advice-title">
       <h2 id="ai-advice-title" className="text-sm font-medium text-ink">AI build advisor</h2>
       <p className="text-xs text-muted mt-2">Get a short explanation of your selected parts, possible uses, and compatibility concerns.</p>
       <div className="mt-3 text-sm text-muted" aria-live="polite" aria-atomic="true">

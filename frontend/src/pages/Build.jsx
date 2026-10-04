@@ -246,7 +246,7 @@ export default function Build() {
           )}
         </div>
 
-        <div className="w-full lg:w-80 shrink-0">
+        <div className="w-full lg:w-80 shrink-0 space-y-5">
           <CompatibilityPanel
             report={report}
             total={total}

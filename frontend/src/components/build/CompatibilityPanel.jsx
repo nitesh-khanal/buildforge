@@ -43,7 +43,7 @@ export default function CompatibilityPanel({
   const recommendedPsu = report?.recommendedPsuWattage || 0;
 
   return (
-    <div className="border border-border-soft rounded p-5 lg:sticky lg:top-24 space-y-5">
+    <div className="border border-border-soft rounded p-5 space-y-5">
       <div>
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${STATUS_DOT[status]}`} />
