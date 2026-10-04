@@ -173,7 +173,8 @@ export default function Checkout() {
 
   return (
     <div className="max-w-content mx-auto px-4 sm:px-6 py-10">
-      <h1 className="font-display text-2xl font-semibold text-ink mb-8">Checkout</h1>
+      <h1 className="font-display text-2xl font-semibold text-ink mb-4">Checkout</h1>
+      <p className="text-sm text-muted mb-6">{window.location.protocol === 'https:' ? 'HTTPS connection · Checkout traffic is encrypted with TLS.' : 'Local HTTP preview · Use the classroom HTTPS server for the secure checkout demonstration.'}</p>
 
       <form onSubmit={handleSubmit} className="grid lg:grid-cols-[1fr_360px] gap-10 items-start">
         <div className="space-y-8">

@@ -1,3 +1,4 @@
+import SecurityDemo from './pages/SecurityDemo';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import Navbar from './components/Navbar';
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/build" element={<Build />} />
+          <Route path="/security-demo" element={<SecurityDemo />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route

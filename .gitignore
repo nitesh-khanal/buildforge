@@ -34,3 +34,6 @@ coverage/
 deploy/production.env
 backups/
 *.archive.gz
+
+# Local classroom certificates and database
+.local/

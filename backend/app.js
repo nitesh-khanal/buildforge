@@ -147,6 +147,10 @@ app.use('/api/admin/community', adminCommunityRoutes);
 // manageable here.
 app.use('/api/admin/categories', adminCategoryRoutes);
 
+if (process.env.SECURITY_DEMO_ENABLED === 'true' && process.env.NODE_ENV !== 'production') {
+  app.use('/api/security-demo', require('./routes/securityDemoRoutes'));
+}
+
 require('./routes/storefrontRoutes')(app);
 
 app.use(notFound);
