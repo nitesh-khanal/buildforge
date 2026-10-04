@@ -43,7 +43,7 @@ function OrderItemRow({ item }) {
   );
 }
 
-export default function OrderSummaryCard({ order, onCheckEsewaStatus, checking, onCancelOrder, cancelling }) {
+export default function OrderSummaryCard({ order, onCheckEsewaStatus, onCheckKhaltiStatus, checking, onCancelOrder, cancelling }) {
   const canCancel = CUSTOMER_CANCELLABLE_STATUSES.includes(order.orderStatus) && onCancelOrder;
 
   return (
@@ -99,6 +99,22 @@ export default function OrderSummaryCard({ order, onCheckEsewaStatus, checking, 
               <button type="button" onClick={onCheckEsewaStatus} disabled={checking} className="btn-secondary w-full mt-4">
                 {checking ? 'Checking…' : 'Check payment status'}
               </button>
+            )}
+
+            {onCheckKhaltiStatus && (
+              <button type="button" onClick={onCheckKhaltiStatus} disabled={checking} className="btn-secondary w-full mt-4">
+                {checking ? 'Checking…' : 'Check or resume Khalti payment'}
+              </button>
+            )}
+            {order.paymentMethod === 'bank' && order.paymentStatus === 'Pending' && order.bankDetails && (
+              <div className="border-t border-border-soft pt-4 mt-4 text-sm space-y-2">
+                <p className="font-medium">Bank transfer instructions</p>
+                <p className="text-muted">Reference: <strong>{order.orderId}</strong>. Pay exactly {formatNPR(order.total)}. Staff confirm the deposit before dispatch.</p>
+                <p>Bank: {order.bankDetails.bankName}</p>
+                <p>Account name: {order.bankDetails.accountName}</p>
+                <p>Account number: {order.bankDetails.accountNumber}</p>
+                {order.bankDetails.bankName?.includes('TEST') && <p className="text-stock-low">Test instructions only. Do not transfer real money.</p>}
+              </div>
             )}
 
             {canCancel && (

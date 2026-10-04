@@ -114,27 +114,12 @@ export default function OrderConfirmation() {
 
       {!loading && !error && order && (
         <>
-          {order.paymentMethod === 'bank' && order.paymentStatus === 'Pending' && order.bankDetails && (
-            <div className="border border-border-soft rounded p-5 mb-6 space-y-2">
-              <h2 className="font-medium">Bank transfer instructions</h2>
-              <p className="text-sm text-muted">Pay exactly {order.total.toLocaleString('en-NP', { style: 'currency', currency: 'NPR' })} and use <strong>{order.orderId}</strong> as the reference. We mark this paid only after confirming the deposit.</p>
-              <p className="text-sm">Bank: {order.bankDetails.bankName}</p>
-              <p className="text-sm">Account name: {order.bankDetails.accountName}</p>
-              <p className="text-sm">Account number: {order.bankDetails.accountNumber}</p>
-              {order.bankDetails.bankName.includes('TEST') && <p className="text-stock-low text-sm">Test instructions only. Do not transfer real money.</p>}
-            </div>
-          )}
-          {order.paymentMethod === 'khalti' && order.paymentStatus === 'Pending' && (
-            <div className="border border-border-soft rounded p-5 mb-6">
-              <p className="text-sm text-muted mb-3">Khalti payment is awaiting verification. The order is not paid yet.</p>
-              <button type="button" onClick={checkKhaltiStatus} disabled={checking} className="btn-secondary">{checking ? 'Checking…' : 'Check or restart Khalti payment'}</button>
-            </div>
-          )}
           <OrderSummaryCard
             order={order}
             onCheckEsewaStatus={
               order.paymentMethod === 'esewa' && order.paymentStatus === 'Pending' ? checkEsewaStatus : null
             }
+            onCheckKhaltiStatus={order.paymentMethod === 'khalti' && order.paymentStatus === 'Pending' ? checkKhaltiStatus : null}
             checking={checking}
           />
           <div className="flex flex-wrap gap-4 mt-8">

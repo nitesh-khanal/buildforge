@@ -267,7 +267,7 @@ const createOrder = asyncHandler(async (req, res) => {
       khaltiPayment = await khaltiService.initiate(order, {
         backendUrl: backendUrl(), clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
       });
-      order.khaltiDetails = { pidx: khaltiPayment.pidx, status: 'Initiated', mock: khaltiPayment.mock };
+      order.khaltiDetails = { pidx: khaltiPayment.pidx, paymentUrl: khaltiPayment.payment_url, status: 'Initiated', mock: khaltiPayment.mock };
       await order.save();
     } catch (error) {
       khaltiError = 'The order was placed, but Khalti could not start. Open your order and retry the payment.';
@@ -331,14 +331,17 @@ const checkKhaltiStatus = asyncHandler(async (req, res) => {
   }
   if (order.paymentMethod !== 'khalti') { res.status(400); throw new Error('This is not a Khalti order.'); }
   if (order.paymentStatus === 'Paid') return res.json({ success: true, order });
+  if (order.khaltiDetails?.mock && order.paymentStatus === 'Pending') {
+    return res.json({ success: true, order, khaltiPayment: { payment_url: order.khaltiDetails.paymentUrl } });
+  }
   if (!order.khaltiDetails?.pidx) {
     const payment = await khaltiService.initiate(order, { backendUrl: backendUrl(), clientUrl: process.env.CLIENT_URL || 'http://localhost:5173' });
-    order.khaltiDetails = { pidx: payment.pidx, status: 'Initiated', mock: payment.mock };
+    order.khaltiDetails = { pidx: payment.pidx, paymentUrl: payment.payment_url, status: 'Initiated', mock: payment.mock };
     await order.save();
     return res.json({ success: true, order, khaltiPayment: payment });
   }
   const checked = await reconcileKhalti(order);
-  res.json({ success: true, order: checked });
+  res.json({ success: true, order: checked, khaltiPayment: checked.paymentStatus === 'Pending' && checked.khaltiDetails?.paymentUrl ? { payment_url: checked.khaltiDetails.paymentUrl } : null });
 });
 const completeLocalKhalti = asyncHandler(async (req, res) => {
   if (process.env.NODE_ENV === 'production' || !khaltiService.isLocalMock()) return res.sendStatus(404);

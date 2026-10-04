@@ -104,7 +104,7 @@ const orderSchema = new mongoose.Schema(
     couponCode: { type: String, default: null },
     total: { type: Number, required: true },
     esewaDetails: { type: esewaDetailsSchema, default: undefined },
-    khaltiDetails: { pidx: String, transactionId: String, status: String, verifiedAt: Date, mock: Boolean },
+    khaltiDetails: { pidx: String, paymentUrl: String, transactionId: String, status: String, verifiedAt: Date, mock: Boolean },
     bankDetails: { bankName: String, accountName: String, accountNumber: String },
     notifications: { type: notificationsSchema, default: () => ({}) },
     // Phase 9 (Delivery): a plain estimate shown to the customer — there is

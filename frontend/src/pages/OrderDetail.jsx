@@ -37,6 +37,16 @@ export default function OrderDetail() {
     }
   }
 
+  async function checkKhaltiStatus() {
+    if (!order) return;
+    setChecking(true); setError(null);
+    try {
+      const { data } = await api.get(`/orders/${order._id}/khalti-status`);
+      setOrder(data.order);
+      if (data.khaltiPayment?.payment_url) window.location.assign(data.khaltiPayment.payment_url);
+    } catch (err) { setError(err.message); } finally { setChecking(false); }
+  }
+
   async function confirmCancelOrder() {
     if (!order) return;
     setCancelling(true);
@@ -78,6 +88,7 @@ export default function OrderDetail() {
         onCheckEsewaStatus={
           order.paymentMethod === 'esewa' && order.paymentStatus === 'Pending' ? checkEsewaStatus : null
         }
+        onCheckKhaltiStatus={order.paymentMethod === 'khalti' && order.paymentStatus === 'Pending' ? checkKhaltiStatus : null}
         checking={checking}
         onCancelOrder={() => setConfirmingCancel(true)}
         cancelling={cancelling}

@@ -49,6 +49,8 @@ it('local Khalti checkout makes a Pending order, then approves only for owner', 
   expect(placed.body.order.paymentStatus).toBe('Pending');
   expect(placed.body.khaltiPayment.payment_url).toContain('/khalti-test/');
   const id = placed.body.order.orderId;
+  const resume = await request(app).get(`/api/orders/${placed.body.order._id}/khalti-status`).set(auth());
+  expect(resume.body.khaltiPayment.payment_url).toContain(`/khalti-test/${id}`);
   expect((await request(app).post(`/api/orders/khalti-local/${id}`).send({ choice: 'approve' })).status).toBe(401);
   const cancelled = await request(app).post(`/api/orders/khalti-local/${id}`).set(auth()).send({ choice: 'cancel' });
   expect(cancelled.body.order.paymentStatus).toBe('Pending');
