@@ -8,6 +8,7 @@ const bytes = base64 => Uint8Array.from(atob(base64), c => c.charCodeAt(0));
 export default function SecurityDemo() {
   const [proof, setProof] = useState(null), [text, setText] = useState(''), [verification, setVerification] = useState(null);
   const [accounts, setAccounts] = useState([]), [from, setFrom] = useState('alice'), [amount, setAmount] = useState('100');
+  const [transactions, setTransactions] = useState([]);
   const [cardScenario, setCardScenario] = useState('approved'), [payment, setPayment] = useState(null);
   const [error, setError] = useState(''), [busy, setBusy] = useState(false);
   const secure = window.location.protocol === 'https:';
@@ -15,7 +16,7 @@ export default function SecurityDemo() {
   useEffect(() => {
     let active = true;
     Promise.all([api.get('/security-demo/wallets'), api.get('/security-demo/transaction-proof')]).then(([w, p]) => {
-      if (active) { setAccounts(w.data.accounts); loadProof(p.data); }
+      if (active) { setAccounts(w.data.accounts); setTransactions(w.data.transactions || []); loadProof(p.data); }
     }).catch(() => { if (active) setError('Start the classroom HTTPS server to enable this demonstration. See CLASS-DEMO.md.'); });
     return () => { active = false; };
   }, []);
@@ -42,8 +43,17 @@ export default function SecurityDemo() {
         {accounts.map(a => <p key={a.id} className="flex justify-between"><span>{a.name}</span><strong>{formatNPR(a.balanceMinor / 100)}</strong></p>)}
         <label className="block text-sm">Sender<select className="input-field w-full mt-1" value={from} onChange={e=>setFrom(e.target.value)}><option value="alice">Alice → Bob</option><option value="bob">Bob → Alice</option></select></label>
         <label className="block text-sm">Amount (NPR)<input className="input-field w-full mt-1" inputMode="decimal" value={amount} onChange={e=>setAmount(e.target.value)} /></label>
-        <button disabled={busy || !accounts.length} className="btn-primary" onClick={()=>run(async()=>{ const {data}=await api.post('/security-demo/transfers',{from,to:from==='alice'?'bob':'alice',amountMinor:amountMinor(),requestId:crypto.randomUUID()});setAccounts(data.accounts);loadProof(data.proof); })}>Transfer demo funds</button>
+        <button disabled={busy || !accounts.length} className="btn-primary" onClick={()=>run(async()=>{ const {data}=await api.post('/security-demo/transfers',{from,to:from==='alice'?'bob':'alice',amountMinor:amountMinor(),requestId:crypto.randomUUID()});setAccounts(data.accounts);setTransactions(previous=>[data.proof.transaction,...previous].slice(0,5));loadProof(data.proof); })}>Transfer demo funds</button>
         <p className="text-xs text-muted">Transfers debit one wallet and credit the other. Insufficient funds are rejected. Repeated request IDs cannot transfer twice.</p>
+        <div className="border-t border-border-soft pt-4">
+          <h3 className="font-semibold text-sm">Recent wallet transfers</h3>
+          {transactions.filter(t=>t.type==='wallet-transfer').length ? <ol className="mt-3 space-y-3">
+            {transactions.filter(t=>t.type==='wallet-transfer').slice(0,3).map(t=><li key={t.transactionId} className="rounded border border-border-soft bg-surface p-3 text-sm">
+              <div className="flex justify-between gap-3"><span className="capitalize">{t.from} → {t.to}</span><strong>{formatNPR(t.amountMinor/100)}</strong></div>
+              <p className="mt-1 font-mono text-xs text-muted break-all">ID: {t.transactionId}</p>
+            </li>)}
+          </ol> : <p className="mt-2 text-sm text-muted">No transfers yet.</p>}
+        </div>
       </section>
       <section className="border border-border-soft rounded p-5 space-y-4"><h2 className="font-semibold">Lab 4 · Dummy credit-card gateway</h2>
         <p className="text-sm text-muted">Uses the amount entered in the wallet panel. Select a test token; no real card number, expiry, or CVV is collected.</p>
