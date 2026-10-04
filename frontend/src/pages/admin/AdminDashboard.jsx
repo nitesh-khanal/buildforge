@@ -138,7 +138,7 @@ export default function AdminDashboard() {
                 type="button"
                 onClick={() => setDays(d)}
                 className={`px-2.5 py-1 text-xs font-mono rounded transition-colors ${
-                  days === d ? 'bg-accent text-ink' : 'text-muted hover:text-ink hover:bg-raised'
+                  days === d ? 'bg-accent text-white' : 'text-muted hover:text-ink hover:bg-raised'
                 }`}
               >
                 {d}d

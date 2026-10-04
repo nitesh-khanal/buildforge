@@ -140,7 +140,7 @@ export default function Navbar() {
               </svg>
               <span className="hidden sm:inline">Wishlist</span>
               {wishlistCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 sm:static sm:ml-0 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-[11px] font-mono flex items-center justify-center text-ink">
+                <span className="absolute -top-0.5 -right-0.5 sm:static sm:ml-0 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-[11px] font-mono flex items-center justify-center text-white">
                   {wishlistCount}
                 </span>
               )}
@@ -155,7 +155,7 @@ export default function Navbar() {
                   <path d="M5 8h4M15 8h4M5 16h4M15 16h4" />
                 </svg>
                 <span className="hidden sm:inline">Compare</span>
-                <span className="absolute -top-0.5 -right-0.5 sm:static sm:ml-0 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-[11px] font-mono flex items-center justify-center text-ink">
+                <span className="absolute -top-0.5 -right-0.5 sm:static sm:ml-0 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-[11px] font-mono flex items-center justify-center text-white">
                   {compareCount}
                 </span>
               </Link>
@@ -171,7 +171,7 @@ export default function Navbar() {
               </svg>
               <span className="hidden sm:inline">Cart</span>
               {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 sm:static sm:ml-0 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-[11px] font-mono flex items-center justify-center text-ink">
+                <span className="absolute -top-0.5 -right-0.5 sm:static sm:ml-0 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-[11px] font-mono flex items-center justify-center text-white">
                   {itemCount}
                 </span>
               )}

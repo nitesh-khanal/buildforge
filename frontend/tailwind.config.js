@@ -4,23 +4,23 @@ export default {
   theme: {
     extend: {
       colors: {
-        base: '#0B0E14',
-        surface: '#11151D',
-        raised: '#161B25',
-        border: '#232A38',
-        'border-soft': '#1B212C',
-        ink: '#E9E7E0',
-        muted: '#8891A0',
-        faint: '#5B6472',
+        base: '#F5F4F0',
+        surface: '#FFFFFF',
+        raised: '#EBECE8',
+        border: '#C7CECB',
+        'border-soft': '#E0E5E1',
+        ink: '#17252B',
+        muted: '#4D5D63',
+        faint: '#65747A',
         accent: {
-          DEFAULT: '#D0273D',
-          hover: '#E9384C',
-          soft: '#3A1620',
+          DEFAULT: '#AE2443',
+          hover: '#8F1935',
+          soft: '#F7E8EC',
         },
         stock: {
-          in: '#4CAF7D',
-          low: '#D9A441',
-          out: '#8A5B64',
+          in: '#176B4C',
+          low: '#965B0B',
+          out: '#AA2841',
         },
       },
       fontFamily: {
@@ -29,8 +29,8 @@ export default {
         mono: ['"IBM Plex Mono"', 'monospace'],
       },
       borderRadius: {
-        sm: '2px',
-        DEFAULT: '3px',
+        sm: '6px',
+        DEFAULT: '10px',
       },
       maxWidth: {
         content: '1360px',

@@ -23,7 +23,7 @@ export default function Pagination({ page, pages, onChange }) {
           type="button"
           onClick={() => onChange(n)}
           className={`w-8 h-8 text-sm font-mono rounded transition-colors ${
-            n === page ? 'bg-accent text-ink' : 'text-muted hover:text-ink hover:bg-raised'
+            n === page ? 'bg-accent text-white' : 'text-muted hover:text-ink hover:bg-raised'
           }`}
         >
           {n}
