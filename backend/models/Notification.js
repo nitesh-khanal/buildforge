@@ -15,6 +15,7 @@ const NOTIFICATION_TYPES = [
   'community_comment',
   'build_copied',
   'review_activity',
+  'competition_reward',
 ];
 
 const notificationSchema = new mongoose.Schema(

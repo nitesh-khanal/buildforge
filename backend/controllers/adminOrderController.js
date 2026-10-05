@@ -9,7 +9,18 @@ const notificationService = require('../services/notificationService');
 const { isValidPaymentTransition } = require('../utils/paymentTransitions');
 const { runEsewaSweep } = require('../services/esewaSweepRunner');
 const orderNotificationService = require('../services/orderNotificationService');
+const { buildWhatsAppLink } = require('../services/shippingNotificationService');
 const { ORDER_STATUSES, PAYMENT_STATUSES } = require('../models/Order');
+
+function adminOrderView(order) {
+  const view = order.toObject();
+  const eligible = ['Paid', 'COD'].includes(view.paymentStatus) && view.orderStatus !== 'Cancelled';
+  view.notifications = {
+    ...view.notifications,
+    shippingWhatsappLink: eligible ? buildWhatsAppLink(view) : null,
+  };
+  return view;
+}
 
 // GET /api/admin/orders — filter by orderStatus/paymentStatus/paymentMethod,
 // search by orderId or customer email, date range, paginated.
@@ -47,7 +58,7 @@ const listOrders = asyncHandler(async (req, res) => {
     total,
     page: pageNum,
     pages: Math.ceil(total / pageSize),
-    orders,
+    orders: orders.map(adminOrderView),
   });
 });
 
@@ -58,7 +69,7 @@ const getOrder = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('Order not found.');
   }
-  res.json({ success: true, order });
+  res.json({ success: true, order: adminOrderView(order) });
 });
 
 // PATCH /api/admin/orders/:id/status — body: { orderStatus: "Shipped" }.
@@ -81,7 +92,7 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 
   const previousStatus = order.orderStatus;
   if (previousStatus === orderStatus) {
-    return res.json({ success: true, order });
+    return res.json({ success: true, order: adminOrderView(order) });
   }
   if (previousStatus === 'Delivered' && orderStatus !== 'Delivered') {
     res.status(400);
@@ -115,7 +126,7 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
   emailService.sendOrderStatusUpdateEmail(order, previousStatus).catch(() => {});
   notificationService.notifyOrderStatusChanged(Notification, order, previousStatus);
 
-  res.json({ success: true, order });
+  res.json({ success: true, order: adminOrderView(order) });
 });
 
 // PATCH /api/admin/orders/:id/payment-status — manual override for edge
@@ -153,7 +164,7 @@ const updatePaymentStatus = asyncHandler(async (req, res) => {
     await order.save();
     await notificationService.notifyPaymentSuccessful(Notification, order);
   }
-  res.json({ success: true, order });
+  res.json({ success: true, order: adminOrderView(order) });
 });
 
 // POST /api/admin/orders/sweep-esewa — manual on-demand trigger for the

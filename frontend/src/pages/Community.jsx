@@ -76,11 +76,14 @@ export default function Community() {
           <h1 className="font-display text-2xl font-semibold text-ink">Community builds</h1>
           <p className="text-sm text-faint mt-1">Browse builds other BuildForge customers have shared.</p>
         </div>
-        {isAuthenticated && (
-          <Link to="/community/mine" className="btn-secondary py-2 px-4 text-sm">
-            My posts
-          </Link>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <Link to="/competitions" className="btn-secondary py-2 px-4 text-sm">Build competitions</Link>
+          {isAuthenticated && (
+            <Link to="/community/mine" className="btn-secondary py-2 px-4 text-sm">
+              My posts
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 mb-6">

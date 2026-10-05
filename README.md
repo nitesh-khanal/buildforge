@@ -72,6 +72,32 @@ npm run seed   # ~40 realistic NPR-priced products + dev accounts
 npm run dev    # http://localhost:5000
 ```
 
+#### Local MongoDB for checkout
+
+Checkout uses transactions, so local MongoDB must run as a replica set.
+For the configured `buildforgeLocal` development database, run this from
+the project root in a separate terminal and keep it running:
+
+```bash
+mkdir -p .local/mongo
+mongod --dbpath "$PWD/.local/mongo" --port 27018 --replSet buildforgeLocal --bind_ip 127.0.0.1 --logpath "$PWD/.local/mongo/mongod.log"
+```
+
+The replica set on this machine is already initialized. Its data lives in
+`.local/mongo`; restarting it with the same directory preserves the data.
+The backend connection in `backend/.env` is:
+
+```dotenv
+MONGODB_URI=mongodb://127.0.0.1:27018/buildforge_local_dev?replicaSet=buildforgeLocal
+```
+
+On a new machine, initialize the set once using `mongosh` connected to
+`mongodb://localhost:27018/?directConnection=true`:
+
+```javascript
+rs.initiate({ _id: 'buildforgeLocal', members: [{ _id: 0, host: 'localhost:27018' }] })
+```
+
 Dev accounts created by the seed script (change before production):
 - `admin@buildforge.com` / `ChangeMe123!` (admin)
 - `customer@buildforge.com` / `ChangeMe123!` (customer)
@@ -143,3 +169,36 @@ The PC Builder includes an optional AI advice panel. Add `GEMINI_API_KEY` to the
 ### Classroom payment and security labs
 
 See [CLASS-DEMO.md](CLASS-DEMO.md) for local HTTPS checkout, SHA-256 hashing, RSA-PSS signatures, stored-value wallet transfers, a dummy card authorization/capture/decline flow, and Khalti-style and bank-transfer simulations. These labs are development-only simulations, with no real money or card credentials.
+
+### Community build competitions
+
+Admins create contests at `/admin/competitions`, choosing start/end times and
+separate coupon rewards for first, second and third place. Dates in the form
+use the browser's local time zone. A reward can be a percentage or fixed NPR
+discount, with a minimum order, optional cap and 1–365 days of validity.
+Dates and rewards are fixed after creation.
+
+Customers visit `/competitions`, select an owned public community build,
+and submit one entry per competition. The entry captures the build's title,
+parts and price. Competition likes and ratings are separate from ordinary
+community engagement. No self-voting is allowed. Likes decide placement;
+earlier submission wins ties. Hidden, private or deleted community posts
+are excluded. With fewer than three eligible entries, only the available
+places receive rewards.
+
+Entry and voting stop at the server's end time. A 30-second background sweep
+awards the top three, with catch-up on server restart and competition/account
+requests. The server must be running to settle results; an offline deadline
+is processed after startup. Settlement, unique account-bound coupons and
+in-app notifications commit together in one MongoDB transaction. Repeated
+settlement cannot duplicate rewards. Coupons are shown at `/account/coupons`,
+can be copied into checkout, and cannot be redeemed by another account.
+
+Competition integration tests require an explicitly disposable database:
+
+```bash
+cd backend
+COMPETITION_TEST_URI='mongodb://127.0.0.1:27018/buildforge_competition_test_local?replicaSet=buildforgeLocal' JWT_SECRET=local-test-secret npx jest --runInBand tests/competition.integration.test.js
+```
+
+This suite deletes only the named `buildforge_competition_test_*` database.

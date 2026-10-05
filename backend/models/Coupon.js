@@ -46,10 +46,15 @@ const couponSchema = new mongoose.Schema(
     applicableProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
     applicableCategories: [{ type: String, enum: CATEGORIES }],
 
+    awardedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+    sourceCompetition: { type: mongoose.Schema.Types.ObjectId, ref: 'Competition', default: null },
+    rewardRank: { type: Number, min: 1, max: 3, default: null },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   },
   { timestamps: true }
 );
+
+couponSchema.index({ sourceCompetition: 1, rewardRank: 1 }, { unique: true, partialFilterExpression: { sourceCompetition: { $type: 'objectId' } } });
 
 couponSchema.pre('validate', function (next) {
   if (this.discountType === 'percentage' && this.discountValue > 100) {

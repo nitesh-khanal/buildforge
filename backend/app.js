@@ -133,6 +133,8 @@ app.use('/api/marketing', marketingRoutes);
 // Admin API" comment below, a pre-existing naming collision between the
 // two phase sequences).
 app.use('/api/community', communityRoutes);
+app.use('/api/competitions', require('./routes/competitionRoutes'));
+app.use('/api/admin/competitions', require('./routes/adminCompetitionRoutes'));
 
 // Admin API (Phase 6) — every route below requires an authenticated admin
 // (see middleware/auth.js `authorize('admin')`, applied in each router).

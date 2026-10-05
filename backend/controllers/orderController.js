@@ -135,6 +135,7 @@ const createOrder = asyncHandler(async (req, res) => {
 
     const couponResult = evaluateCoupon({
       coupon: appliedCoupon,
+      userId: req.user._id,
       items: cart.items,
       productMap: productMapForCoupon,
       subtotal,

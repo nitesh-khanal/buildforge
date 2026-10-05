@@ -42,7 +42,7 @@ module.exports = function mountStorefront(app) {
       const id = req.path.slice('/products/'.length);
       product = mongoose.isValidObjectId(id) ? await Product.findById(id).lean() : null;
       if (!product || (process.env.NODE_ENV === 'production' && !product.catalogVerified)) { status = 404; product = null; }
-    } else if (!PUBLIC_PAGES[req.path] && !/^\/(security-demo|khalti-test|cart|compare|login|register|checkout|wishlist|notifications|orders|order-confirmation|admin|account|community\/mine|community\/builds)(\/|$)/.test(req.path)) status = 404;
+    } else if (!PUBLIC_PAGES[req.path] && !/^\/(competitions|security-demo|khalti-test|cart|compare|login|register|checkout|wishlist|notifications|orders|order-confirmation|admin|account|community\/mine|community\/builds)(\/|$)/.test(req.path)) status = 404;
     res.status(status).set('Cache-Control', 'no-store').type('html').send(renderPage(html, req.path, product));
   }));
 };

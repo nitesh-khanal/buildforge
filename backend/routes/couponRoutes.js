@@ -7,6 +7,8 @@ const { validateCoupon } = require('../controllers/couponController');
 // convention as wishlistRoutes.js/addressRoutes.js.
 router.use(protect);
 
+router.get('/mine', require('../controllers/competitionController').myCoupons);
+
 router.post('/validate', validateCoupon);
 
 module.exports = router;

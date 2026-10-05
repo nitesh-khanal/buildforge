@@ -60,6 +60,7 @@ function AccountMenu() {
           >
             Addresses
           </Link>
+          <Link to="/account/coupons" onClick={() => setOpen(false)} className="block px-3 py-2 text-sm text-muted hover:text-ink hover:bg-raised">My coupons</Link>
           {user.role === 'admin' && (
             <Link
               to="/admin"

@@ -23,6 +23,9 @@ import Addresses from './pages/Addresses';
 import Notifications from './pages/Notifications';
 import Compare from './pages/Compare';
 import Community from './pages/Community';
+import Competitions from './pages/Competitions';
+import CompetitionDetail from './pages/CompetitionDetail';
+import MyCoupons from './pages/MyCoupons';
 import CommunityBuildDetail from './pages/CommunityBuildDetail';
 import MyCommunityBuilds from './pages/MyCommunityBuilds';
 import AdminLayout from './pages/admin/AdminLayout';
@@ -82,6 +85,9 @@ export default function App() {
           />
           <Route path="/khalti-test/:orderId" element={<ProtectedRoute><KhaltiTest /></ProtectedRoute>} />
           <Route path="/compare" element={<Compare />} />
+          <Route path="/competitions" element={<Competitions />} />
+          <Route path="/competitions/:id" element={<CompetitionDetail />} />
+          <Route path="/account/coupons" element={<ProtectedRoute><MyCoupons /></ProtectedRoute>} />
           <Route path="/community" element={<Community />} />
           <Route path="/community/builds/:id" element={<CommunityBuildDetail />} />
           <Route
@@ -143,6 +149,7 @@ export default function App() {
             <Route path="reviews" element={<AdminReviews />} />
             <Route path="coupons" element={<AdminCoupons />} />
             <Route path="community" element={<AdminCommunity />} />
+            <Route path="competitions" element={<Competitions admin />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

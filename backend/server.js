@@ -13,6 +13,7 @@ const { ensureDefaultCategories } = require('./utils/categoryDefaults');
 
 let server;
 let sweepTimer;
+let competitionTimer;
 
 const PORT = process.env.PORT || 5000;
 
@@ -30,6 +31,12 @@ connectDB().then(async () => {
   server = app.listen(PORT, () => {
     console.log(`BuildForge API listening on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
   });
+
+  await Promise.all(['Competition', 'CompetitionEntry', 'CompetitionVote', 'Coupon', 'Notification'].map(name => require(`./models/${name}`).init()));
+  const { finalizeDueCompetitions } = require('./services/competitionService');
+  const settle = () => finalizeDueCompetitions().catch(err => console.error('Competition settlement failed:', err.message));
+  await settle();
+  competitionTimer = setInterval(settle, 30000);
 
   // Phase 9: periodic sweep for eSewa orders stuck Pending indefinitely (see
   // services/esewaSweepService.js). Off in tests, and can be disabled
@@ -52,6 +59,7 @@ process.on('unhandledRejection', (err) => {
 
 async function shutdown() {
   clearInterval(sweepTimer);
+  clearInterval(competitionTimer);
   const deadline = setTimeout(() => process.exit(1), 25000);
   deadline.unref();
   if (server) await new Promise((resolve) => server.close(resolve));

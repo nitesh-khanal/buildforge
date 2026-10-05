@@ -91,6 +91,7 @@ function computeDiscountAmount(coupon, eligibleSubtotal) {
 // limit") without leaking anything sensitive.
 function evaluateCoupon({
   coupon,
+  userId,
   items,
   productMap = new Map(),
   subtotal,
@@ -100,6 +101,9 @@ function evaluateCoupon({
 }) {
   if (!coupon) {
     return { valid: false, reason: 'Coupon code not found.' };
+  }
+  if (coupon.awardedTo && String(coupon.awardedTo) !== String(userId)) {
+    return { valid: false, reason: 'This reward coupon belongs to another account.' };
   }
   if (!coupon.isActive) {
     return { valid: false, reason: 'This coupon is no longer active.' };

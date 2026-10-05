@@ -37,6 +37,7 @@ async function evaluateCouponForUser({ code, userId }) {
 
   const result = evaluateCoupon({
     coupon,
+    userId,
     items: cart.items,
     productMap,
     subtotal,

@@ -10,6 +10,7 @@ const NAV = [
   { to: '/admin/reviews', label: 'Reviews' },
   { to: '/admin/coupons', label: 'Coupons' },
   { to: '/admin/community', label: 'Community' },
+  { to: '/admin/competitions', label: 'Competitions' },
 ];
 
 export default function AdminLayout() {

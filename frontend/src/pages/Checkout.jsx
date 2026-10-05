@@ -357,34 +357,69 @@ export default function Checkout() {
             {paymentMethod === 'card' && (
               <div className="grid sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border-soft">
                 <div className="sm:col-span-2">
-                  <label className="block text-xs text-muted mb-1.5">Card number</label>
+                  <label htmlFor="card-number" className="block text-xs text-muted mb-1.5">Card number</label>
                   <input
                     required
+                    id="card-number"
+                    inputMode="numeric"
+                    autoComplete="cc-number"
+                    minLength={19}
+                    maxLength={19}
+                    pattern="[0-9]{4} [0-9]{4} [0-9]{4} [0-9]{4}"
+                    title="Enter a 16-digit card number."
+                    aria-describedby="card-number-help"
                     className="input-field w-full font-mono"
                     placeholder="4111 1111 1111 1111"
                     value={card.cardNumber}
-                    onChange={(e) => setCard((c) => ({ ...c, cardNumber: e.target.value }))}
+                    onChange={(e) => {
+                      const input = e.target;
+                      const digitPosition = input.value.slice(0, input.selectionStart).replace(/\D/g, '').length;
+                      const digits = input.value.replace(/\D/g, '').slice(0, 16);
+                      const formatted = digits.match(/.{1,4}/g)?.join(' ') || '';
+                      setCard((c) => ({ ...c, cardNumber: formatted }));
+                      const position = Math.min(formatted.length, digitPosition + Math.floor(Math.max(0, digitPosition - 1) / 4));
+                      requestAnimationFrame(() => {
+                        if (document.activeElement === input) input.setSelectionRange(position, position);
+                      });
+                    }}
                   />
-                  <p className="text-xs text-faint mt-1">End it in 0000 to test a declined payment.</p>
+                  <p id="card-number-help" className="text-xs text-faint mt-1">Enter 16 digits. End it in 0000 to test a declined payment.</p>
                 </div>
                 <div>
-                  <label className="block text-xs text-muted mb-1.5">Expiry</label>
+                  <label htmlFor="card-expiry" className="block text-xs text-muted mb-1.5">Expiry</label>
                   <input
                     required
+                    id="card-expiry"
+                    inputMode="numeric"
+                    autoComplete="cc-exp"
+                    minLength={5}
+                    maxLength={5}
+                    pattern="(0[1-9]|1[0-2])/[0-9]{2}"
+                    title="Enter MM/YY with a month from 01 to 12."
                     className="input-field w-full font-mono"
                     placeholder="MM/YY"
                     value={card.expiry}
-                    onChange={(e) => setCard((c) => ({ ...c, expiry: e.target.value }))}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
+                      setCard((c) => ({ ...c, expiry: digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits }));
+                    }}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-muted mb-1.5">CVV</label>
+                  <label htmlFor="card-cvv" className="block text-xs text-muted mb-1.5">CVV</label>
                   <input
                     required
+                    id="card-cvv"
+                    inputMode="numeric"
+                    autoComplete="cc-csc"
+                    minLength={3}
+                    maxLength={4}
+                    pattern="[0-9]{3,4}"
+                    title="Enter a 3- or 4-digit CVV."
                     className="input-field w-full font-mono"
                     placeholder="123"
                     value={card.cvv}
-                    onChange={(e) => setCard((c) => ({ ...c, cvv: e.target.value }))}
+                    onChange={(e) => setCard((c) => ({ ...c, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
                   />
                 </div>
               </div>
@@ -410,6 +445,7 @@ export default function Checkout() {
           </div>
 
           <div className="mt-3 mb-1">
+            <Link to="/account/coupons" className="text-xs text-accent inline-block mb-2">View my reward coupons</Link>
             {appliedCoupon ? (
               <div className="flex items-center justify-between gap-2 border border-accent/40 bg-accent-soft/30 rounded px-3 py-2">
                 <span className="text-xs font-mono text-ink">{appliedCoupon.code} applied</span>
