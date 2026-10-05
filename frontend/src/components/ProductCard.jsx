@@ -1,17 +1,37 @@
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { formatNPR } from '../utils/format';
 import { getSpecEntries } from '../utils/specs';
 import StockBadge from './StockBadge';
 import CompareToggleButton from './compare/CompareToggleButton';
+import { marketingSource, trackMarketingEvent } from '../lib/marketing';
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart();
   const { isWishlisted, toggle } = useWishlist();
   const [status, setStatus] = useState('idle'); // idle | adding | added | error
   const [wishBusy, setWishBusy] = useState(false);
+  const cardRef = useRef(null);
+  const { pathname } = useLocation();
+  const source = marketingSource(pathname);
+
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return undefined;
+    const recordVisible = () => {
+      const rect = card.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) trackMarketingEvent('impression', product._id, source);
+    };
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) recordVisible();
+    }, { threshold: 0.5 });
+    observer.observe(card);
+    window.addEventListener('analytics-consent-changed', recordVisible);
+    return () => { observer.disconnect(); window.removeEventListener('analytics-consent-changed', recordVisible); };
+  }, [product._id, source]);
 
   const specs = getSpecEntries(product, { limit: 3 });
   const outOfStock = product.stockStatus === 'out-of-stock';
@@ -23,7 +43,10 @@ export default function ProductCard({ product }) {
     setStatus('adding');
     const res = await addItem(product._id, 1);
     setStatus(res.ok ? 'added' : 'error');
-    if (res.ok) setTimeout(() => setStatus('idle'), 1400);
+    if (res.ok) {
+      trackMarketingEvent('conversion', product._id, source);
+      setTimeout(() => setStatus('idle'), 1400);
+    }
   }
 
   async function handleWishlist(e) {
@@ -37,7 +60,9 @@ export default function ProductCard({ product }) {
 
   return (
     <Link
+      ref={cardRef}
       to={`/products/${product._id}`}
+      onClick={() => trackMarketingEvent('click', product._id, source)}
       className="group flex flex-col border border-border-soft hover:border-border bg-surface rounded transition-colors"
     >
       <div className="relative aspect-[4/3] bg-raised border-b border-border-soft flex items-center justify-center overflow-hidden">

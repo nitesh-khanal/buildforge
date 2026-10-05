@@ -9,6 +9,7 @@ import StockBadge from '../components/StockBadge';
 import QuantityStepper from '../components/QuantityStepper';
 import ProductCard from '../components/ProductCard';
 import ReviewsSection from '../components/review/ReviewsSection';
+import { trackMarketingEvent } from '../lib/marketing';
 
 const WORKS_WITH_LABELS = {
   compatibleMotherboards: 'Compatible motherboards',
@@ -92,6 +93,7 @@ export default function ProductDetail() {
     setAddError(null);
     const res = await addItem(product._id, qty);
     if (res.ok) {
+      trackMarketingEvent('conversion', product._id, 'product');
       setAddState('added');
       setTimeout(() => setAddState('idle'), 1600);
     } else {

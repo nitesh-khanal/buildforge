@@ -18,6 +18,7 @@ const adminProductRoutes = require('./routes/adminProductRoutes');
 const adminOrderRoutes = require('./routes/adminOrderRoutes');
 const adminUserRoutes = require('./routes/adminUserRoutes');
 const adminAnalyticsRoutes = require('./routes/adminAnalyticsRoutes');
+const marketingRoutes = require('./routes/marketingRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const adminReviewRoutes = require('./routes/adminReviewRoutes');
@@ -46,11 +47,11 @@ app.disable('x-powered-by');
 app.use(helmet({
   contentSecurityPolicy: { directives: {
     defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", 'https://www.googletagmanager.com'],
+    scriptSrc: ["'self'", 'https://www.googletagmanager.com', 'https://connect.facebook.net'],
     styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
     fontSrc: ["'self'", 'https://fonts.gstatic.com'],
     imgSrc: ["'self'", 'data:', 'https:'],
-    connectSrc: ["'self'", ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:5000'] : []), 'https://*.google-analytics.com', 'https://*.analytics.google.com', 'https://www.googletagmanager.com'],
+    connectSrc: ["'self'", ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:5000'] : []), 'https://*.google-analytics.com', 'https://*.analytics.google.com', 'https://www.googletagmanager.com', 'https://www.facebook.com'],
     formAction: ["'self'", 'https://epay.esewa.com.np', ...(process.env.NODE_ENV !== 'production' ? ['https://rc-epay.esewa.com.np'] : [])],
   } },
   crossOriginResourcePolicy: { policy: 'cross-origin' },
@@ -126,6 +127,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/builds', buildRoutes);
 app.use('/api/recommendations', recommendationRoutes);
+app.use('/api/marketing', marketingRoutes);
 // This workflow's Phase 6: community builds/likes/comments/ratings/reports
 // (not to be confused with the original 8-phase project's own "Phase 6 —
 // Admin API" comment below, a pre-existing naming collision between the

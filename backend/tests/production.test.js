@@ -24,6 +24,10 @@ it('returns public configuration without database, signing or merchant secrets',
   expect(value).not.toContain('hidden-merchant-secret');
   expect(value).not.toContain('hidden-smtp-password');
 });
+it('exposes a configured numeric Meta Pixel ID and rejects an invalid one', () => {
+  expect(siteConfig({ ...env, META_PIXEL_ID: '123456789012345' }).metaPixelId).toBe('123456789012345');
+  expect(productionErrors({ ...env, META_PIXEL_ID: 'bad-id' }).join(' ')).toMatch(/META_PIXEL_ID/);
+});
 
 it('keeps new live payment methods gated on credentials', () => {
   expect(paymentMethods(env).map(method => method.id)).toEqual(['cod']);

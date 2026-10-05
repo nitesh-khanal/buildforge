@@ -72,6 +72,7 @@ export default function AdminDashboard() {
   const [sales, setSales] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
   const [breakdown, setBreakdown] = useState([]);
+  const [marketing, setMarketing] = useState({ counts: { impression: 0, click: 0, conversion: 0 }, products: [] });
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -85,13 +86,15 @@ export default function AdminDashboard() {
       api.get('/admin/analytics/sales', { params: { period: 'daily', days } }),
       api.get('/admin/analytics/top-products', { params: { limit: 8 } }),
       api.get('/admin/analytics/category-breakdown'),
+      api.get('/admin/analytics/marketing', { params: { days } }),
     ])
-      .then(([ov, sl, tp, cb]) => {
+      .then(([ov, sl, tp, cb, mk]) => {
         if (cancelled) return;
         setOverview(ov.data.overview);
         setSales(sl.data.sales);
         setTopProducts(tp.data.topProducts);
         setBreakdown(cb.data.breakdown);
+        setMarketing(mk.data);
       })
       .catch((err) => !cancelled && setError(err.message))
       .finally(() => !cancelled && setLoading(false));
@@ -159,6 +162,26 @@ export default function AdminDashboard() {
           <CategoryBreakdown breakdown={breakdown} />
         </div>
       </div>
+
+      <section className="border border-border-soft rounded p-5 space-y-5">
+        <div>
+          <h2 className="text-sm font-medium text-ink">Product marketing funnel, last {days} days</h2>
+          <p className="text-xs text-muted mt-1">An impression is a visible product card. A click opens its product page. A conversion is a successful add-to-cart action. Counts require visitor analytics consent and are for demonstration, not ad-platform billing.</p>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-3">
+          <StatCard label="Impressions" value={marketing.counts.impression} />
+          <StatCard label="Clicks" value={marketing.counts.click} sub={`${marketing.counts.impression ? ((marketing.counts.click / marketing.counts.impression) * 100).toFixed(1) : '0.0'}% click rate`} />
+          <StatCard label="Add-to-cart conversions" value={marketing.counts.conversion} sub={`${marketing.counts.click ? ((marketing.counts.conversion / marketing.counts.click) * 100).toFixed(1) : '0.0'}% of clicks`} />
+        </div>
+        {marketing.products.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-muted border-b border-border-soft"><tr><th className="py-2">Product</th><th className="py-2 text-right">Views</th><th className="py-2 text-right">Clicks</th><th className="py-2 text-right">Added</th></tr></thead>
+              <tbody>{marketing.products.map((item) => <tr key={item.productId} className="border-b border-border-soft/60"><td className="py-2 text-ink">{item.name}</td><td className="py-2 text-right font-mono">{item.impression}</td><td className="py-2 text-right font-mono">{item.click}</td><td className="py-2 text-right font-mono">{item.conversion}</td></tr>)}</tbody>
+            </table>
+          </div>
+        ) : <p className="text-sm text-faint">No marketing events yet. Allow analytics on the storefront, view a product, open it and add it to the cart to demonstrate the funnel.</p>}
+      </section>
     </div>
   );
 }

@@ -6,6 +6,7 @@ const {
   getSalesOverTime,
   getTopProducts,
   getCategoryBreakdown,
+  getMarketingFunnel,
 } = require('../controllers/adminAnalyticsController');
 
 router.use(protect, authorize('admin'));
@@ -14,5 +15,6 @@ router.get('/overview', getOverview);
 router.get('/sales', getSalesOverTime);
 router.get('/top-products', getTopProducts);
 router.get('/category-breakdown', getCategoryBreakdown);
+router.get('/marketing', getMarketingFunnel);
 
 module.exports = router;

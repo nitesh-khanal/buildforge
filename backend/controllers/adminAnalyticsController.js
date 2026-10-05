@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const User = require('../models/User');
+const MarketingEvent = require('../models/MarketingEvent');
 const asyncHandler = require('../utils/asyncHandler');
 
 // Orders in these paymentStatuses represent real, confirmed revenue.
@@ -200,4 +201,24 @@ const getCategoryBreakdown = asyncHandler(async (req, res) => {
   res.json({ success: true, breakdown });
 });
 
-module.exports = { getOverview, getSalesOverTime, getTopProducts, getCategoryBreakdown };
+const getMarketingFunnel = asyncHandler(async (req, res) => {
+  const days = Math.min(90, Math.max(1, Number(req.query.days) || 30));
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const rows = await MarketingEvent.aggregate([
+    { $match: { createdAt: { $gte: since } } },
+    { $group: { _id: { product: '$product', type: '$type' }, count: { $sum: 1 } } },
+    { $group: { _id: '$_id.product', events: { $push: { type: '$_id.type', count: '$count' } } } },
+    { $lookup: { from: 'products', localField: '_id', foreignField: '_id', as: 'product' } },
+    { $unwind: { path: '$product', preserveNullAndEmptyArrays: true } },
+    { $project: { _id: 0, productId: '$_id', name: { $ifNull: ['$product.name', 'Removed product'] }, events: 1 } },
+  ]);
+  const counts = { impression: 0, click: 0, conversion: 0 };
+  const products = rows.map((row) => {
+    const item = { productId: row.productId, name: row.name, impression: 0, click: 0, conversion: 0 };
+    for (const event of row.events) { item[event.type] = event.count; counts[event.type] += event.count; }
+    return item;
+  }).sort((a, b) => b.impression - a.impression).slice(0, 8);
+  res.json({ success: true, days, counts, products });
+});
+
+module.exports = { getOverview, getSalesOverTime, getTopProducts, getCategoryBreakdown, getMarketingFunnel };

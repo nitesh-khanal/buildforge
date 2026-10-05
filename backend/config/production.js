@@ -30,6 +30,7 @@ function productionErrors(env = process.env) {
     if (env.EMAIL_ENABLED !== 'true' || !env.EMAIL_HOST || !env.EMAIL_USER || !env.EMAIL_PASSWORD) errors.push('Configure order email before opening checkout.');
   }
   if (env.GA_MEASUREMENT_ID && !/^G-[A-Z0-9]+$/.test(env.GA_MEASUREMENT_ID)) errors.push('GA_MEASUREMENT_ID must be a GA4 G- measurement ID.');
+  if (env.META_PIXEL_ID && !/^\d{8,20}$/.test(env.META_PIXEL_ID)) errors.push('META_PIXEL_ID must be a numeric Meta Pixel ID.');
   return errors;
 }
 
@@ -59,6 +60,7 @@ function siteConfig(env = process.env) {
           accountNumber: env.NODE_ENV === 'production' ? env.BANK_ACCOUNT_NUMBER : '0000000000' }
       : null,
     analyticsId: /^G-[A-Z0-9]+$/.test(env.GA_MEASUREMENT_ID || '') ? env.GA_MEASUREMENT_ID : '',
+    metaPixelId: /^\d{8,20}$/.test(env.META_PIXEL_ID || '') ? env.META_PIXEL_ID : '',
     indexable: env.SITE_INDEXABLE === 'true',
     publicUrl: env.CLIENT_URL || 'http://localhost:5173',
   };

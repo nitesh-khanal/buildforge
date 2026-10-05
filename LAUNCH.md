@@ -7,7 +7,7 @@ The code is prepared for a single-domain storefront with an Express API, persist
 - Local storefront and compatibility builder, demo catalog and demo payments in development.
 - Admin catalog JSON preview/import, photo upload, source records, SKU-based updates and archived drafts.
 - SEO metadata delivered in HTML for public/product pages, canonical URLs, Product JSON-LD, robots.txt and paginated XML sitemaps.
-- Optional GA4 with opt-in preferences, public-page measurements and excluded private pages.
+- Optional GA4 and Meta Pixel with opt-in preferences, plus a local product marketing funnel for the classroom demo.
 - Docker deployment definition, readiness checks, graceful shutdown, production configuration validation and GitHub CI.
 
 ## When a domain and server are available
@@ -69,7 +69,11 @@ Sources: [Google product structured data](https://developers.google.com/search/d
 
 ## Optional analytics
 
-Create a GA4 property later and set `GA_MEASUREMENT_ID=G-...` in the runtime environment. Until configured, no analytics script or prompt appears. Visitors must opt in before the tag loads and can change that choice in the footer/privacy page. Ads personalization is disabled. Measurements exclude search queries, account pages, checkout, order identifiers and admin pages.
+Visitors must opt in before product events are counted or third-party scripts load, and can change that choice in the footer/privacy page. The first-party funnel stores product-card impressions, product-page clicks and successful add-to-cart conversions for 90 days, with no customer identifiers. An administrator can see counts, rates and top products on the dashboard. To demonstrate it without an advertising account: allow analytics on the storefront, scroll a product card into view, open that product, add it to the cart, then refresh the admin dashboard. The conversion here means **add to cart**, not a paid order or an ad-platform conversion.
+
+To use Meta Pixel later, create a Pixel in Meta Events Manager and set `META_PIXEL_ID` to its numeric ID in the runtime environment, then restart the server. It sends `PageView` on public routes, `ProductImpression` for visible cards, `ViewContent` when a product card is opened, and `AddToCart` on a successful cart addition. Keep the ID empty for the classroom demo; then only the local funnel runs. A live Pixel cannot be verified without your own Pixel ID and Events Manager access. Do not place a second Pixel on the site, or the events can be counted twice.
+
+GA4 remains optional: create a GA4 property later and set `GA_MEASUREMENT_ID=G-...`. Ads personalization is disabled. Measurements exclude search queries, account pages, checkout, order identifiers and admin pages.
 
 **Turn off Enhanced Measurement in the GA4 web stream**, including browser-history pageviews, form interactions and site search. BuildForge sends its own sanitized pageviews; leaving automatic events on can duplicate counts or collect unwanted URLs. Use GA4 DebugView to verify one page_view per public navigation and no events on account/checkout/admin pages. Do not add another tag in Google Tag Manager at the same time.
 

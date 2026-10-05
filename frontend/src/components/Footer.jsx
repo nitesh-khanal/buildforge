@@ -16,7 +16,7 @@ export default function Footer() {
         <div className="flex flex-wrap gap-10">
           <div className="space-y-1"><p className="text-muted mb-2">Help</p>
             {['contact', 'shipping', 'returns', 'privacy'].map((page) => <Link key={page} to={`/${page}`} className="block capitalize hover:text-accent">{page}</Link>)}
-            {site.analyticsId && <button type="button" className="block hover:text-accent" onClick={() => window.dispatchEvent(new Event('analytics-preferences'))}>Analytics preferences</button>}
+            <button type="button" className="block hover:text-accent" onClick={() => window.dispatchEvent(new Event('analytics-preferences'))}>Analytics preferences</button>
           </div>
           <div className="space-y-1">
             <p className="text-muted mb-2">Shop</p>
